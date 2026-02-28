@@ -1,0 +1,18 @@
+
+  <div class="wrapper">
+    <div class="author">
+        <div class="author-avatar-wrapper">
+          <img
+            class="author-avatar"
+            src="img/shark.png"
+            alt="avatar"
+            loading="lazy"
+          />
+      </div>
+      <h2 class="author-name"><%=config.author%></h2>
+      <p class="author-bio"><%=theme.bio%></p>
+    </div>
+    <main aria-label="Content">
+      <%-partial('partials/recent-posts')%>
+    </main>
+  </div>
