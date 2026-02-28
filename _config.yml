@@ -103,4 +103,4 @@ theme: Klise
 deploy:
   type: git
   repo: git@github.com:BojackMa/BojackMa.github.io.git
-  branch: master
+  branch: main
