@@ -24,10 +24,9 @@ jobs:
       - name: Generate static files
         run: npx hexo generate
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./public
-          publish_branch: main
-          external_repository: BojackMa/BojackMa.github.io
+          publish_branch: gh-pages
