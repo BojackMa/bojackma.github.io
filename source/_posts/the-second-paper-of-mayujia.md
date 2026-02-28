@@ -5,6 +5,8 @@ tags:
  - 嘛玩意吗
  - test
  - test2
+ - 技术
+ - Hexo
 ---
 
 
