@@ -1132,7 +1132,11 @@ pre .xml .cdata {
 .tags-container a {
   padding: 5px 10px;
   background-color: #f6f8fa;
+  color: #434648;
   margin-right: 10px;
+  margin-bottom: 10px;
+  display: inline-block;
+  border-radius: 3px;
 }
 
 .dis {
@@ -1344,6 +1348,10 @@ body[data-theme=dark] .not-found .solution {
 }
 body[data-theme=dark] .not-found .solution:hover {
   color: #ff2957;
+}
+body[data-theme=dark] .not-found .tags-container a {
+  background-color: #1b1d25;
+  color: #c7bebe;
 }
 body[data-theme=dark] .search-article input[type=search] {
   color: #c7bebe;
