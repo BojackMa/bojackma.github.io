@@ -1,11 +1,18 @@
-<%
-var pageTitle = page.title || config.subtitle || '';
+<!-- var pageTitle = page.title || config.subtitle || '';
 if (is_archive()) pageTitle = ' Archives ';
 if (is_tag()) pageTitle = 'Tag: ' + page.tag;
 if (is_category()) pageTitle = 'Category: ' + page.category;
 if (is_month()) pageTitle += ': ' + page.month + '/' + page.year;
 if (is_year()) pageTitle += ': ' + page.year;
-pageTitle += ' [ ' + config.title + ' ]';
+pageTitle += ' [ ' + config.title + ' ]'; -->
+<%
+var pageTitle = page.title || config.subtitle || '';
+if (is_archive()) pageTitle = 'Archives';
+if (is_tag()) pageTitle = page.tag;
+if (is_category()) pageTitle = page.category;
+if (is_month()) pageTitle += ' ' + page.month + '/' + page.year;
+if (is_year()) pageTitle += ' ' + page.year;
+pageTitle = pageTitle + ' - ' + config.title;
 %>
 
 
