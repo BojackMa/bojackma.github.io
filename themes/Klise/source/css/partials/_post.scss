@@ -416,10 +416,20 @@ h1,
   }
 }
 
+// .tags-container a {
+//   padding: 5px 10px;
+//   background-color: #f6f8fa;
+//   margin-right: 10px;
+// }
+
 .tags-container a {
   padding: 5px 10px;
   background-color: #f6f8fa;
+  color: #434648;
   margin-right: 10px;
+  margin-bottom: 10px;
+  display: inline-block;
+  border-radius: 3px;
 }
 
 .dis {

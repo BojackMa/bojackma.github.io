@@ -234,6 +234,13 @@ body[data-theme="dark"] {
     .solution:hover {
       color: $dark-text-link-blue-active;
     }
+
+    // Tags
+    .tags-container a {
+      background-color: $dark-light;
+      color: $dark-text-base-color;
+    }
+    
   }  
 
   .search-article {
