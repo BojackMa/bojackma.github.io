@@ -136,9 +136,11 @@ pre .xml .cdata {
 }
 .post blockquote p {
   font-size: 17px;
-  font-style: italic;
+  // font-style: italic;
+  font-style: normal;
   line-height: 1.8em;
   color: #999;
+  text-align: left;
 }
 
 
