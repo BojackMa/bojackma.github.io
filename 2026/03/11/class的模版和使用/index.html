@@ -15,7 +15,7 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hello World - Bojack Ma</title>
+<title>class的模版和使用 - Bojack Ma</title>
 
   <link rel="icon" href="/img/favicon.ico">
 
@@ -258,43 +258,30 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
       <header class="header">
         
           <div class="tags">
-            <a href="/tags/%E6%8A%80%E6%9C%AF/" class="tag"># 技术</a><a href="/tags/Hexo/" class="tag"># Hexo</a>
+            <a href="/tags/%E7%AE%97%E6%B3%95/" class="tag"># 算法</a>
           </div>
         
-        <h1 class="header-title" itemprop="headline">Hello World</h1>
+        <h1 class="header-title" itemprop="headline">class的模版和使用</h1>
           <div class="post-meta">
-            <time>Mar 01, 2026</time>
+            <time>Mar 11, 2026</time>
             <span itemprop="author">
               <span itemprop="name">Bojack Ma</span>
             </span>
           </div>
         </header>
 
-          <div class="page-content"><p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
-</div>
+          <div class="page-content"><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 通用类模板</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">MyClass</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="type">int</span> val;       <span class="comment">// 一个成员变量</span></span><br><span class="line">    <span class="type">double</span> score;  <span class="comment">// 可以再加一个成员变量</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 默认构造函数</span></span><br><span class="line">    <span class="built_in">MyClass</span>() &#123;</span><br><span class="line">        val = <span class="number">0</span>;</span><br><span class="line">        score = <span class="number">0.0</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 单参数构造函数</span></span><br><span class="line">    <span class="built_in">MyClass</span>(<span class="type">int</span> _val) &#123;</span><br><span class="line">        val = _val;</span><br><span class="line">        score = <span class="number">0.0</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 多参数构造函数</span></span><br><span class="line">    <span class="built_in">MyClass</span>(<span class="type">int</span> _val, <span class="type">double</span> _score) &#123;</span><br><span class="line">        val = _val;</span><br><span class="line">        score = _score;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 成员函数示例</span></span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">print</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        cout &lt;&lt; <span class="string">&quot;val=&quot;</span> &lt;&lt; val &lt;&lt; <span class="string">&quot;, score=&quot;</span> &lt;&lt; score &lt;&lt; endl;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    MyClass a;               <span class="comment">// 默认构造        这两种创建方式要注意！！！</span></span><br><span class="line">    MyClass* b = <span class="keyword">new</span> <span class="built_in">MyClass</span>(<span class="number">30</span>);  <span class="comment">// 对象 b 在堆上     这两种创建方式要注意！！！</span></span><br><span class="line">    <span class="function">MyClass <span class="title">c</span><span class="params">(<span class="number">20</span>, <span class="number">95.5</span>)</span></span>;     <span class="comment">// 多参数构造</span></span><br><span class="line"></span><br><span class="line">    a.<span class="built_in">print</span>();  <span class="comment">// 输出: val=0, score=0</span></span><br><span class="line">    b.<span class="built_in">print</span>();  <span class="comment">// 输出: val=30, score=0</span></span><br><span class="line">    c.<span class="built_in">print</span>();  <span class="comment">// 输出: val=20, score=95.5</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
           <nav class="post-nav">
     
-    <a class="post-nav-item post-nav-next" href="/2023/12/20/the-second-paper-of-mayujia/">
+    <a class="post-nav-item post-nav-next" href="/2026/03/01/%E6%9C%8D%E5%8A%A1%E5%99%A8%E6%8C%96%E7%9F%BF%E7%97%85%E6%AF%92%E5%A4%84%E7%90%86/">
       <div class="nav-arrow">&lt;&nbsp;OLDER</div>
-      <span class="post-title">the second paper of mayujia</span>
+      <span class="post-title">服务器挖矿病毒处理</span>
     </a>
     
     
-    <a class="post-nav-item post-nav-prev" href="/2026/03/01/%E6%9C%8D%E5%8A%A1%E5%99%A8%E6%8C%96%E7%9F%BF%E7%97%85%E6%AF%92%E5%A4%84%E7%90%86/">
+    <a class="post-nav-item post-nav-prev" href="/2026/03/12/hello-world/">
       <div class="nav-arrow">NEWER&nbsp;&gt;</div>
-      <span class="post-title">服务器挖矿病毒处理</span>
+      <span class="post-title">Hello World</span>
     </a>
     
 </nav>
