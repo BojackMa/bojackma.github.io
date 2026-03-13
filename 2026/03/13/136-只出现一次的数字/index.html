@@ -270,7 +270,11 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
           </div>
         </header>
 
-          <div class="page-content"><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    int singleNumber(vector&lt;int&gt;&amp; nums) &#123;</span><br><span class="line">        int ret = 0;</span><br><span class="line">        for(auto it = nums.begin(); it != nums.end(); it++)&#123;</span><br><span class="line">            ret = ret ^ *it;</span><br><span class="line">        &#125;</span><br><span class="line">        return ret;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">//要记住位运算符号是按位异或^、按位与&amp;、按位或|、按位取反~、左移 &lt;&lt;、右移 &gt;&gt;</span><br><span class="line">//hash表也能做，但是不符合空间要求</span><br><span class="line">//异或，异或可以做到相同的两者相消，并且异或满足交换律，即a异或b异或a等于b，相当于筛选出b来了，本质上还是位运算。</span><br></pre></td></tr></table></figure>
+          <div class="page-content"><p>关于引用和指针</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">vector&lt;int&gt; nums = &#123;1,2,3&#125;;  </span><br><span class="line">vector&lt;int&gt; v(5);  // 大小为5，所有元素默认初始化为0</span><br><span class="line">vector&lt;int&gt; v(5, 10);  // 大小为5，每个元素都是10</span><br><span class="line">int singleNumber(vector&lt;int&gt;&amp; nums) //引用传递</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    &#123;</span><br><span class="line">        int ret = 0;</span><br><span class="line">        for(auto it = nums.begin(); it != nums.end(); it++)&#123;</span><br><span class="line">            ret = ret ^ *it;</span><br><span class="line">        &#125;</span><br><span class="line">        return ret;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">//要记住位运算符号是按位异或^、按位与&amp;、按位或|、按位取反~、左移 &lt;&lt;、右移 &gt;&gt;</span><br><span class="line">//hash表也能做，但是不符合空间要求</span><br><span class="line">//异或，异或可以做到相同的两者相消，并且异或满足交换律，即a异或b异或a等于b，相当于筛选出b来了，本质上还是位运算。</span><br></pre></td></tr></table></figure>
 </div>
           <nav class="post-nav">
     
@@ -279,6 +283,11 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
       <span class="post-title">128.最长连续序列</span>
     </a>
     
+    
+    <a class="post-nav-item post-nav-prev" href="/2026/03/13/169-%E5%A4%9A%E6%95%B0%E5%85%83%E7%B4%A0/">
+      <div class="nav-arrow">NEWER&nbsp;&gt;</div>
+      <span class="post-title">169. 多数元素</span>
+    </a>
     
 </nav>
 
