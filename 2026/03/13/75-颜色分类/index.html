@@ -15,7 +15,7 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title> - Bojack Ma</title>
+<title>75. 颜色分类 - Bojack Ma</title>
 
   <link rel="icon" href="/img/favicon.ico">
 
@@ -222,7 +222,7 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
             
             
             
-            <a class="menu-link active" href="/"> Home</a>
+            <a class="menu-link " href="/"> Home</a>
           
             
             
@@ -253,98 +253,36 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
     </nav>
   </div>
   
-  <div class="wrapper">
-    <div class="author">
-        <div class="author-avatar-wrapper">
-          <img
-            class="author-avatar"
-            src="img/shark.png"
-            alt="avatar"
-            loading="lazy"
-          />
-      </div>
-      <h2 class="author-name">Bojack Ma</h2>
-      <p class="author-bio">In an age of AI, striving to keep the &#39;I&#39; authentic...</p>
-    </div>
-    <main aria-label="Content">
-      
+<div class="wrapper post">
+  <main class="page-content" aria-label="Content">
+      <header class="header">
+        
+          <div class="tags">
+            <a href="/tags/%E7%AE%97%E6%B3%95/" class="tag"># 算法</a><a href="/tags/%E6%8C%87%E9%92%88/" class="tag"># 指针</a>
+          </div>
+        
+        <h1 class="header-title" itemprop="headline">75. 颜色分类</h1>
+          <div class="post-meta">
+            <time>Mar 13, 2026</time>
+            <span itemprop="author">
+              <span itemprop="name">Bojack Ma</span>
+            </span>
+          </div>
+        </header>
 
-    <h3 class="posts-item-note" aria-label="Recent Posts">Recent Posts</h3>
+          <div class="page-content"><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    void sortColors(vector&lt;int&gt;&amp; nums) &#123;</span><br><span class="line">        int index = 0;        //这个标志着下一个待处理的数字，目前是</span><br><span class="line">        while(index &lt; nums.size() &amp;&amp; nums[index] == 0)&#123;</span><br><span class="line">            index++;</span><br><span class="line">        &#125;                       //index初始化完毕</span><br><span class="line">   </span><br><span class="line">        for(int i = index; i &lt; nums.size(); i++)&#123;       //i标志着下一个为0，且需要交换的</span><br><span class="line">            if(nums[i] == 0)&#123;</span><br><span class="line">                swap(nums[i], nums[index]);</span><br><span class="line">                index++;</span><br><span class="line">            &#125;       //如果不为0，说明是目标用户</span><br><span class="line">        &#125;            </span><br><span class="line">        </span><br><span class="line">        while(index &lt; nums.size() &amp;&amp; nums[index] == 1)&#123;</span><br><span class="line">            index++;</span><br><span class="line">        &#125;                       //index初始化完毕</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        for(int i = index; i &lt; nums.size(); i++)&#123;       //i标志着下一个为1，且需要交换的</span><br><span class="line">            if(nums[i] == 1)&#123;</span><br><span class="line">                swap(nums[i], nums[index]);</span><br><span class="line">                index++;</span><br><span class="line">            &#125;       //如果不为0，说明是目标用户</span><br><span class="line">        &#125;       </span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">//一般原地操作都会用到指针。</span><br><span class="line">//这个题感觉也要死记硬背。</span><br></pre></td></tr></table></figure></div>
+          <nav class="post-nav">
     
-      <article class="post-item">
-        <span class="post-item-date" datetime="2026-03-13T13:58:35.000Z">Mar 13, 2026</span>
-        <h4 class="post-item-title">
-          <a href="/2026/03/13/75-%E9%A2%9C%E8%89%B2%E5%88%86%E7%B1%BB/">75. 颜色分类</a>
-        </h4>
-      </article>
+    <a class="post-nav-item post-nav-next" href="/2026/03/13/169-%E5%A4%9A%E6%95%B0%E5%85%83%E7%B4%A0/">
+      <div class="nav-arrow">&lt;&nbsp;OLDER</div>
+      <span class="post-title">169. 多数元素</span>
+    </a>
     
-      <article class="post-item">
-        <span class="post-item-date" datetime="2026-03-13T13:28:26.000Z">Mar 13, 2026</span>
-        <h4 class="post-item-title">
-          <a href="/2026/03/13/169-%E5%A4%9A%E6%95%B0%E5%85%83%E7%B4%A0/">169. 多数元素</a>
-        </h4>
-      </article>
     
-      <article class="post-item">
-        <span class="post-item-date" datetime="2026-03-13T12:42:55.000Z">Mar 13, 2026</span>
-        <h4 class="post-item-title">
-          <a href="/2026/03/13/136-%E5%8F%AA%E5%87%BA%E7%8E%B0%E4%B8%80%E6%AC%A1%E7%9A%84%E6%95%B0%E5%AD%97/">136. 只出现一次的数字</a>
-        </h4>
-      </article>
-    
-      <article class="post-item">
-        <span class="post-item-date" datetime="2026-03-13T12:12:14.000Z">Mar 13, 2026</span>
-        <h4 class="post-item-title">
-          <a href="/2026/03/13/128-%E6%9C%80%E9%95%BF%E8%BF%9E%E7%BB%AD%E5%BA%8F%E5%88%97/">128.最长连续序列</a>
-        </h4>
-      </article>
-    
-      <article class="post-item">
-        <span class="post-item-date" datetime="2026-03-13T06:11:30.724Z">Mar 13, 2026</span>
-        <h4 class="post-item-title">
-          <a href="/2026/03/13/hello-world/">Hello World</a>
-        </h4>
-      </article>
-    
-      <article class="post-item">
-        <span class="post-item-date" datetime="2026-03-12T17:32:14.000Z">Mar 12, 2026</span>
-        <h4 class="post-item-title">
-          <a href="/2026/03/12/49-%E5%AD%97%E6%AF%8D%E5%BC%82%E4%BD%8D%E8%AF%8D%E5%88%86%E7%BB%84/">49.字母异位词分组</a>
-        </h4>
-      </article>
-    
-      <article class="post-item">
-        <span class="post-item-date" datetime="2026-03-12T16:42:55.000Z">Mar 12, 2026</span>
-        <h4 class="post-item-title">
-          <a href="/2026/03/12/1-%E4%B8%A4%E6%95%B0%E4%B9%8B%E5%92%8C/">1.两数之和</a>
-        </h4>
-      </article>
-    
-      <article class="post-item">
-        <span class="post-item-date" datetime="2026-03-11T20:44:57.000Z">Mar 11, 2026</span>
-        <h4 class="post-item-title">
-          <a href="/2026/03/11/class%E7%9A%84%E6%A8%A1%E7%89%88%E5%92%8C%E4%BD%BF%E7%94%A8/">class的模版和使用</a>
-        </h4>
-      </article>
-    
-      <article class="post-item">
-        <span class="post-item-date" datetime="2026-03-01T16:56:29.000Z">Mar 01, 2026</span>
-        <h4 class="post-item-title">
-          <a href="/2026/03/01/%E6%9C%8D%E5%8A%A1%E5%99%A8%E6%8C%96%E7%9F%BF%E7%97%85%E6%AF%92%E5%A4%84%E7%90%86/">服务器挖矿病毒处理</a>
-        </h4>
-      </article>
-    
-      <article class="post-item">
-        <span class="post-item-date" datetime="2023-12-20T17:43:37.000Z">Dec 20, 2023</span>
-        <h4 class="post-item-title">
-          <a href="/2023/12/20/the-second-paper-of-mayujia/">the second paper of mayujia</a>
-        </h4>
-      </article>
-    
+</nav>
 
-
-    </main>
-  </div>
+   </main>
+</div>
 
   <footer class="footer">
     <small class="footer_copyright">
