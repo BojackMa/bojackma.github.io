@@ -15,7 +15,7 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tags - Bojack Ma</title>
+<title>279. 完全平方数 - Bojack Ma</title>
 
   <link rel="icon" href="/img/favicon.ico">
 
@@ -246,23 +246,46 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
             
             
             
-            <a class="menu-link active" href="/tags/"> Tags</a>
+            <a class="menu-link " href="/tags/"> Tags</a>
           
         </div>
       </div>
     </nav>
   </div>
   
-<div class="wrapper">
-    <div class="page-content">
-    <header class="header">
-      <h1 class="header-title center">Tags</h1>
-    </header>
-    <div class="tags-container">
-        <a href="/tags/Hexo/" style="font-size: 15.33px; color: #4f4f4f">Hexo</a> <a href="/tags/hash/" style="font-size: 16.67px; color: #383838">hash</a> <a href="/tags/test/" style="font-size: 14px; color: #666">test</a> <a href="/tags/test2/" style="font-size: 14px; color: #666">test2</a> <a href="/tags/trick/" style="font-size: 14px; color: #666">trick</a> <a href="/tags/%E4%BD%8D%E8%BF%90%E7%AE%97/" style="font-size: 14px; color: #666">位运算</a> <a href="/tags/%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92/" style="font-size: 16.67px; color: #383838">动态规划</a> <a href="/tags/%E5%98%9B%E7%8E%A9%E6%84%8F%E5%90%97/" style="font-size: 15.33px; color: #4f4f4f">嘛玩意吗</a> <a href="/tags/%E5%AE%89%E5%85%A8%E4%BA%8B%E4%BB%B6/" style="font-size: 14px; color: #666">安全事件</a> <a href="/tags/%E6%8A%80%E6%9C%AF/" style="font-size: 15.33px; color: #4f4f4f">技术</a> <a href="/tags/%E6%8C%87%E9%92%88/" style="font-size: 14px; color: #666">指针</a> <a href="/tags/%E6%8C%96%E7%9F%BF%E7%97%85%E6%AF%92/" style="font-size: 14px; color: #666">挖矿病毒</a> <a href="/tags/%E6%9C%8D%E5%8A%A1%E5%99%A8/" style="font-size: 14px; color: #666">服务器</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 18px; color: #212121">算法</a>
-      </div>
-    </div>
+<div class="wrapper post">
+  <main class="page-content" aria-label="Content">
+      <header class="header">
+        
+          <div class="tags">
+            <a href="/tags/%E7%AE%97%E6%B3%95/" class="tag"># 算法</a><a href="/tags/%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92/" class="tag"># 动态规划</a>
+          </div>
+        
+        <h1 class="header-title" itemprop="headline">279. 完全平方数</h1>
+          <div class="post-meta">
+            <time>Mar 13, 2026</time>
+            <span itemprop="author">
+              <span itemprop="name">Bojack Ma</span>
+            </span>
+          </div>
+        </header>
+
+          <div class="page-content"><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">//平方根公式    int squareroot = sqrt(i); //在&lt;cmath&gt;库里面，double类型</span><br><span class="line">//幂运算        pow(x, y)       //double类型</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    int numSquares(int n) &#123;</span><br><span class="line">        vector&lt;int&gt; dp(n + 1, INT_MAX); //或者用n + 1来代表最大值</span><br><span class="line">        dp[0] = 1;</span><br><span class="line">        dp[1] = 1;</span><br><span class="line">        for(int i = 2; i &lt;= n; i++)&#123;</span><br><span class="line">            int squareroot = sqrt(i); //在&lt;cmath&gt;库里面，double类型</span><br><span class="line">            if(i == squareroot * squareroot)    dp[i] = 1;</span><br><span class="line">            for(int j = 1; j &lt;= squareroot; j++)</span><br><span class="line">                dp[i] = min(dp[i], dp[i - j * j] + 1);</span><br><span class="line">        &#125;</span><br><span class="line">        return dp[n];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></div>
+          <nav class="post-nav">
+    
+    <a class="post-nav-item post-nav-next" href="/2026/03/13/198-%E6%89%93%E5%AE%B6%E5%8A%AB%E8%88%8D/">
+      <div class="nav-arrow">&lt;&nbsp;OLDER</div>
+      <span class="post-title">198. 打家劫舍</span>
+    </a>
+    
+    
+</nav>
+
+   </main>
 </div>
+
   <footer class="footer">
     <small class="footer_copyright">
       <div id="bottom-inner">
