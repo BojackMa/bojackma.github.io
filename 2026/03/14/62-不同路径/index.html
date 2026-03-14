@@ -15,7 +15,7 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>32. 最长有效括号 - Bojack Ma</title>
+<title>62. 不同路径 - Bojack Ma</title>
 
   <link rel="icon" href="/img/favicon.ico">
 
@@ -257,11 +257,7 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
   <main class="page-content" aria-label="Content">
       <header class="header">
         
-          <div class="tags">
-            <a href="/tags/%E7%AE%97%E6%B3%95/" class="tag"># 算法</a><a href="/tags/%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92/" class="tag"># 动态规划</a>
-          </div>
-        
-        <h1 class="header-title" itemprop="headline">32. 最长有效括号</h1>
+        <h1 class="header-title" itemprop="headline">62. 不同路径</h1>
           <div class="post-meta">
             <time>Mar 14, 2026</time>
             <span itemprop="author">
@@ -270,22 +266,14 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
           </div>
         </header>
 
-          <div class="page-content"><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">括号题就应该想到用栈，这个栈不容易做的。</span><br></pre></td></tr></table></figure>
-
-
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    int longestValidParentheses(string s) &#123;</span><br><span class="line">        int maxans = 0;</span><br><span class="line">        int start = 0;       // 当前有效子串的起始位置</span><br><span class="line">        stack&lt;int&gt; stk;      // 只存未匹配的 &#x27;(&#x27; 的下标</span><br><span class="line"></span><br><span class="line">        for (int i = 0; i &lt; s.length(); i++) &#123;</span><br><span class="line">            if (s[i] == &#x27;(&#x27;) &#123;</span><br><span class="line">                stk.push(i);</span><br><span class="line">            &#125; </span><br><span class="line">            else if (s[i] == &#x27;)&#x27;)  &#123;</span><br><span class="line">                if (stk.empty())     </span><br><span class="line">                    start = i + 1;      // &#x27;)&#x27; 找不到匹配，当前有效串断掉，重置起点</span><br><span class="line">                else &#123;</span><br><span class="line">                    stk.pop();  // 匹配掉一个 &#x27;(&#x27;</span><br><span class="line">                    if (stk.empty()) &#123;</span><br><span class="line">                        // 栈空：从 start 到 i 全部有效</span><br><span class="line">                        maxans = max(maxans, i - start + 1);</span><br><span class="line">                    &#125; else &#123;</span><br><span class="line">                        // 栈非空：从栈顶的 &#x27;(&#x27; 后一位到 i 有效</span><br><span class="line">                        maxans = max(maxans, i - stk.top());</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return maxans;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">//看到&#x27;(&#x27;、&#x27;)&#x27;这个就应该想到用栈，栈里面存储index，方便计算！！！</span><br><span class="line"></span><br><span class="line">//栈里面只保存&#x27;(&#x27;，用来记录需要匹配的</span><br><span class="line">//如果栈里面为空，又遇到了来了个&#x27;)&#x27;，那说明这个&#x27;)&#x27;永远也匹配不上了，要清掉了。</span><br><span class="line">//栈里只放未匹配的 ( 的下标，边界信息单独用 start 记录。</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+          <div class="page-content"></div>
           <nav class="post-nav">
     
-    <a class="post-nav-item post-nav-next" href="/2026/03/14/416-%E5%88%86%E5%89%B2%E7%AD%89%E5%92%8C%E5%AD%90%E9%9B%86/">
+    <a class="post-nav-item post-nav-next" href="/2026/03/14/32-%E6%9C%80%E9%95%BF%E6%9C%89%E6%95%88%E6%8B%AC%E5%8F%B7/">
       <div class="nav-arrow">&lt;&nbsp;OLDER</div>
-      <span class="post-title">416. 分割等和子集</span>
+      <span class="post-title">32. 最长有效括号</span>
     </a>
     
-    
-    <a class="post-nav-item post-nav-prev" href="/2026/03/14/62-%E4%B8%8D%E5%90%8C%E8%B7%AF%E5%BE%84/">
-      <div class="nav-arrow">NEWER&nbsp;&gt;</div>
-      <span class="post-title">62. 不同路径</span>
-    </a>
     
 </nav>
 
