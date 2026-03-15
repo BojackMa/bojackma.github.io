@@ -255,13 +255,11 @@ em {
 
 blockquote {
   color: #6b7886;
-  text-align: center;
+  text-align: left;
   opacity: 0.9;
-  border-top: 1px solid #ececec;
-  border-bottom: 1px solid #ececec;
-  padding: 10px;
-  margin-left: 10px;
-  margin-right: 10px;
+  border-left: 4px solid #ececec;
+  padding: 10px 15px;
+  margin: 10px 0;
   font-size: 1em;
 }
 blockquote > :last-child {
