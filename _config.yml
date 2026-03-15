@@ -106,3 +106,8 @@ deploy:
   repo: git@github.com:BojackMa/BojackMa.github.io.git
   branch: main
 
+archive_generator:
+  per_page: 10   # 每页显示几篇，改成你想要的数字
+  yearly: true
+  monthly: true
+  daily: false
