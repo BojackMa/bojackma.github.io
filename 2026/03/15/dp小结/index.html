@@ -15,7 +15,7 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title> - Bojack Ma</title>
+<title>dp小结 - Bojack Ma</title>
 
   <link rel="icon" href="/img/favicon.ico">
 
@@ -222,7 +222,7 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
             
             
             
-            <a class="menu-link active" href="/"> Home</a>
+            <a class="menu-link " href="/"> Home</a>
           
             
             
@@ -253,98 +253,88 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
     </nav>
   </div>
   
-  <div class="wrapper">
-    <div class="author">
-        <div class="author-avatar-wrapper">
-          <img
-            class="author-avatar"
-            src="img/shark.png"
-            alt="avatar"
-            loading="lazy"
-          />
-      </div>
-      <h2 class="author-name">Bojack Ma</h2>
-      <p class="author-bio">In an age of AI, striving to keep the &#39;I&#39; authentic...</p>
-    </div>
-    <main aria-label="Content">
-      
+<div class="wrapper post">
+  <main class="page-content" aria-label="Content">
+      <header class="header">
+        
+          <div class="tags">
+            <a href="/tags/%E7%AE%97%E6%B3%95/" class="tag"># 算法</a><a href="/tags/%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92/" class="tag"># 动态规划</a>
+          </div>
+        
+        <h1 class="header-title" itemprop="headline">dp小结</h1>
+          <div class="post-meta">
+            <time>Mar 15, 2026</time>
+            <span itemprop="author">
+              <span itemprop="name">Bojack Ma</span>
+            </span>
+          </div>
+        </header>
 
-    <h3 class="posts-item-note" aria-label="Recent Posts">Recent Posts</h3>
+          <div class="page-content"><p>dp 数组的本质：是把“原问题”拆成一系列“更小但结构相同的子问题”。dp[i] 或 dp[i][j] 只是用来表示“一个子问题的答案”。</p>
+<h3 id="什么时候用dp？"><a href="#什么时候用dp？" class="headerlink" title="什么时候用dp？"></a>什么时候用dp？</h3><p>所有关键是定义子问题到底是什么。如果子问题被频繁计算、 子问题的最优解能组成原问题的最优解，那么就可以用dp。</p>
+<h3 id="dp的三种类型"><a href="#dp的三种类型" class="headerlink" title="dp的三种类型"></a>dp的三种类型</h3><p>dp有三种类型：</p>
+<ul>
+<li>前缀型 DP（范式A）。dp[i]表示前 i 个元素的答案。dp[i][j]表示前 i 和前 j 的答案。<strong>直接以目标答案作为dp。前缀型 DP &#x3D; 从左往右构建答案，像拼积木。</strong></li>
+</ul>
+<p><strong>这类问题有一个共同特征：你不关心最后到底选了哪个元素，只关心用了前面多少个元素后能达到什么结果。判断信号：问的是”能不能&#x2F;最多能&#x2F;最少要”，且每个元素的决策是独立的”选或不选”，不需要和下一个元素产生约束关系。</strong></p>
+<p>例如：139. 单词拆分。1143. 最长公共子序列。72. 编辑距离。</p>
+<ul>
+<li>结尾型 DP（范式B）。dp[i]表示以 i 结尾 的最优解。<strong>为什么要“以 i 结尾”？因为：子序列不连续，如果不用结尾限制，就会重复统计。所以要固定最后一个元素。结尾型 DP &#x3D; 把最后一个元素固定住</strong></li>
+</ul>
+<p><strong>这类问题的关键特征是：未来的决策依赖于你当前选的那个具体值。判断信号：转移方程需要知道”上一步选的具体是什么值”来判断当前能否衔接（递增&#x2F;递减&#x2F;相邻&#x2F;乘积符号等）。</strong></p>
+<p>例如：300. 最长递增子序列。152. 乘积最大子数组。</p>
+<ul>
+<li>容量型 DP（背包）（范式A）。本质也是前缀型 DP。只是背包问题把 第二维从“序列位置”换成了“容量”。前缀 DP（物品 + 容量）。前 i 个物品容量为 j时的最优解。1143. 最长公共子序列。dp[i][j]是text1 前 i，text2 前 j。而背包是dp[i][j]前 i 个物品容量 j。本质上：都是在处理两个维度的前缀。</li>
+</ul>
+<p>例如：416 分割等和子集。</p>
+<h3 id="面试如何确定dp？这个特别重要"><a href="#面试如何确定dp？这个特别重要" class="headerlink" title="面试如何确定dp？这个特别重要"></a>面试如何确定dp？这个特别重要</h3><p>如何在面试中快速确定 dp 定义？</p>
+<p>第一步：确认是否是 DP（问最值&#x2F;计数&#x2F;可行性 + 能分解为最优解子问题 + 有重叠子问题）。</p>
+<p>第二步：看涉及几个序列。两个序列 → 大概率是 dp[i][j]，用”前 i &#x2F; 前 j”的范式A。</p>
+<p>第三步：如果只有一个序列，问自己——“转移时，我需要知道上一步选的是哪个具体元素吗？”需要 → 范式B（以 i 结尾）；不需要 → 范式A（前 i 个）。</p>
+<p>第四步：如果范式B发现信息不够（比如 152 题只记最大值不够，还要记最小值），就增加状态维度，但 dp[i] 的”以 i 结尾”这个核心定义不变。</p>
+<blockquote>
+<ol start="139">
+<li>单词拆分。给你一个字符串 s 和一个字符串列表 wordDict 作为字典。如果可以利用字典中出现的一个或多个单词拼接出 s 则返回 true。<br>这个题目的dp数组是dp[i]表示前 i 个字符能不能被字典里的单词拼出来，是以目标单词的前 i 个字符进行判断。</li>
+</ol>
+</blockquote>
+<blockquote>
+<ol start="300">
+<li>最长递增子序列。给你一个整数数组 nums ，找到其中最长严格递增子序列的长度。子序列 是由数组派生而来的序列，删除（或不删除）数组中的元素而不改变其余元素的顺序。例如，[3,6,2,7] 是数组 [0,3,1,6,2,2,7] 的子序列。<br>这个题目的dp数组是dp[i]表示nums[i] 结尾的最长上升子序列的长度，是以nums[i] 结尾。</li>
+</ol>
+</blockquote>
+<blockquote>
+<ol start="152">
+<li>乘积最大子数组。给你一个整数数组 nums ，请你找出数组中乘积最大的非空连续 子数组（该子数组中至少包含一个数字），并返回该子数组所对应的乘积。这里的dp是minDp表示以 nums[i] 结尾的 最小乘积，maxDp以 nums[i] 结尾的 最大乘积。</li>
+</ol>
+</blockquote>
+<blockquote>
+<ol start="416">
+<li>分割等和子集。给你一个 只包含正整数 的 非空 数组 nums 。请你判断是否可以将这个数组分割成两个子集，使得两个子集的元素和相等。这就是经典的“0-1 背包”问题：每个数字只能选一次，目标容量是 sum&#x2F;2。</li>
+</ol>
+</blockquote>
+<blockquote>
+<ol start="1143">
+<li>最长公共子序列。给定两个字符串 text1 和 text2，返回这两个字符串的最长 公共子序列 的长度。如果不存在 公共子序列 ，返回 0 。一个字符串的 子序列 是指这样一个新的字符串：它是由原字符串在不改变字符的相对顺序的情况下删除某些字符（也可以不删除任何字符）后组成的新字符串。<br>dp[i][j]表示text1 前 i 个字符 和 text2 前 j 个字符的最长公共子序列长度。</li>
+</ol>
+</blockquote>
+<blockquote>
+<ol start="72">
+<li>编辑距离。给你两个单词 word1 和 word2， 请返回将 word1 转换成 word2 所使用的最少操作数  。dp[i][j]：word1 前 i 个字符 转换成 word2 前 j 个字符的最少操作数</li>
+</ol>
+</blockquote>
+</div>
+          <nav class="post-nav">
     
-      <article class="post-item">
-        <span class="post-item-date" datetime="2026-03-15T14:29:58.000Z">Mar 15, 2026</span>
-        <h4 class="post-item-title">
-          <a href="/2026/03/15/dp%E5%B0%8F%E7%BB%93/">dp小结</a>
-        </h4>
-      </article>
+    <a class="post-nav-item post-nav-next" href="/2026/03/15/hello-world/">
+      <div class="nav-arrow">&lt;&nbsp;OLDER</div>
+      <span class="post-title">Hello World</span>
+    </a>
     
-      <article class="post-item">
-        <span class="post-item-date" datetime="2026-03-15T07:07:37.490Z">Mar 15, 2026</span>
-        <h4 class="post-item-title">
-          <a href="/2026/03/15/hello-world/">Hello World</a>
-        </h4>
-      </article>
     
-      <article class="post-item">
-        <span class="post-item-date" datetime="2026-03-14T17:35:44.000Z">Mar 14, 2026</span>
-        <h4 class="post-item-title">
-          <a href="/2026/03/14/72-%E7%BC%96%E8%BE%91%E8%B7%9D%E7%A6%BB/">72. 编辑距离</a>
-        </h4>
-      </article>
-    
-      <article class="post-item">
-        <span class="post-item-date" datetime="2026-03-14T17:03:24.000Z">Mar 14, 2026</span>
-        <h4 class="post-item-title">
-          <a href="/2026/03/14/1143-%E6%9C%80%E9%95%BF%E5%85%AC%E5%85%B1%E5%AD%90%E5%BA%8F%E5%88%97/">1143. 最长公共子序列</a>
-        </h4>
-      </article>
-    
-      <article class="post-item">
-        <span class="post-item-date" datetime="2026-03-14T16:30:08.000Z">Mar 14, 2026</span>
-        <h4 class="post-item-title">
-          <a href="/2026/03/14/5-%E6%9C%80%E9%95%BF%E5%9B%9E%E6%96%87%E5%AD%90%E4%B8%B2/">5. 最长回文子串</a>
-        </h4>
-      </article>
-    
-      <article class="post-item">
-        <span class="post-item-date" datetime="2026-03-14T16:07:06.000Z">Mar 14, 2026</span>
-        <h4 class="post-item-title">
-          <a href="/2026/03/14/64-%E6%9C%80%E5%B0%8F%E8%B7%AF%E5%BE%84%E5%92%8C/">64. 最小路径和</a>
-        </h4>
-      </article>
-    
-      <article class="post-item">
-        <span class="post-item-date" datetime="2026-03-14T15:48:48.000Z">Mar 14, 2026</span>
-        <h4 class="post-item-title">
-          <a href="/2026/03/14/62-%E4%B8%8D%E5%90%8C%E8%B7%AF%E5%BE%84/">62. 不同路径</a>
-        </h4>
-      </article>
-    
-      <article class="post-item">
-        <span class="post-item-date" datetime="2026-03-14T15:16:11.000Z">Mar 14, 2026</span>
-        <h4 class="post-item-title">
-          <a href="/2026/03/14/32-%E6%9C%80%E9%95%BF%E6%9C%89%E6%95%88%E6%8B%AC%E5%8F%B7/">32. 最长有效括号</a>
-        </h4>
-      </article>
-    
-      <article class="post-item">
-        <span class="post-item-date" datetime="2026-03-14T13:59:20.000Z">Mar 14, 2026</span>
-        <h4 class="post-item-title">
-          <a href="/2026/03/14/416-%E5%88%86%E5%89%B2%E7%AD%89%E5%92%8C%E5%AD%90%E9%9B%86/">416. 分割等和子集</a>
-        </h4>
-      </article>
-    
-      <article class="post-item">
-        <span class="post-item-date" datetime="2026-03-14T13:05:31.000Z">Mar 14, 2026</span>
-        <h4 class="post-item-title">
-          <a href="/2026/03/14/152-%E4%B9%98%E7%A7%AF%E6%9C%80%E5%A4%A7%E5%AD%90%E6%95%B0%E7%BB%84/">152. 乘积最大子数组</a>
-        </h4>
-      </article>
-    
+</nav>
 
-
-    </main>
-  </div>
+   </main>
+</div>
 
   <footer class="footer">
     <small class="footer_copyright">
