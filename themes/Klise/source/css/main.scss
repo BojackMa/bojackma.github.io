@@ -61,6 +61,66 @@ $on-widescreen: 1152px;
 // Import sass files
 @import "partials/fonts","partials/base","partials/layout","partials/post","partials/miscellaneous","partials/dark";
 
-
   
-
+/* ── Paginator ── */
+.paginator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2.5em;
+  flex-wrap: wrap;
+}
+ 
+.paginator-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid #ececec;
+  color: #0d122b;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+ 
+a.paginator-item:hover {
+  background-color: #f5f5f5;
+  border-color: #d2c7c7;
+  color: #f66;
+}
+ 
+.paginator-item.current {
+  background-color: #0d122b;
+  border-color: #0d122b;
+  color: #fff;
+  cursor: default;
+}
+ 
+.paginator-item.disabled {
+  opacity: 0.35;
+  cursor: default;
+  pointer-events: none;
+}
+ 
+/* Dark mode */
+.dark .paginator-item {
+  border-color: #4a4d56;
+  color: #eaeaea;
+}
+ 
+.dark a.paginator-item:hover {
+  background-color: #1b1d25;
+  border-color: #767f87;
+  color: #ff5277;
+}
+ 
+.dark .paginator-item.current {
+  background-color: #eaeaea;
+  border-color: #eaeaea;
+  color: #131418;
+}

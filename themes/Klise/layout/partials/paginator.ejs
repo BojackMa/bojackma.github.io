@@ -1,0 +1,23 @@
+<% if (page.total > 1) { %>
+<nav class="paginator" aria-label="Archive pagination">
+  <% if (page.prev) { %>
+    <a class="paginator-item paginator-prev" href="<%- url_for(page.prev_link) %>">&lsaquo; Newer</a>
+  <% } else { %>
+    <span class="paginator-item paginator-prev disabled">&lsaquo; Newer</span>
+  <% } %>
+
+  <% for (var i = 1; i <= page.total; i++) { %>
+    <% if (i === page.current) { %>
+      <span class="paginator-item paginator-page current"><%= i %></span>
+    <% } else { %>
+      <a class="paginator-item paginator-page" href="<%- url_for(page.base + (i === 1 ? '' : i + '/')) %>"><%= i %></a>
+    <% } %>
+  <% } %>
+
+  <% if (page.next) { %>
+    <a class="paginator-item paginator-next" href="<%- url_for(page.next_link) %>">Older &rsaquo;</a>
+  <% } else { %>
+    <span class="paginator-item paginator-next disabled">Older &rsaquo;</span>
+  <% } %>
+</nav>
+<% } %>
