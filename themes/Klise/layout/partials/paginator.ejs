@@ -9,6 +9,8 @@
   <% for (var i = 1; i <= page.total; i++) { %>
     <% if (i === page.current) { %>
       <span class="paginator-item paginator-page current"><%= i %></span>
+    <% } else if (i === 1) { %>
+      <a class="paginator-item paginator-page" href="<%- url_for(page.base) %>"><%= i %></a>
     <% } else { %>
       <a class="paginator-item paginator-page" href="<%- url_for(page.base + config.pagination_dir + '/' + i + '/') %>"><%= i %></a>
     <% } %>
