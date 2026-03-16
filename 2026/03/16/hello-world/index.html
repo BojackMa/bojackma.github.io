@@ -15,7 +15,7 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>dp小结 - Bojack Ma</title>
+<title>Hello World - Bojack Ma</title>
 
   <link rel="icon" href="/img/favicon.ico">
 
@@ -258,70 +258,43 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
       <header class="header">
         
           <div class="tags">
-            <a href="/tags/%E7%AE%97%E6%B3%95/" class="tag"># 算法</a><a href="/tags/%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92/" class="tag"># 动态规划</a>
+            <a href="/tags/%E6%8A%80%E6%9C%AF/" class="tag"># 技术</a><a href="/tags/Hexo/" class="tag"># Hexo</a>
           </div>
         
-        <h1 class="header-title" itemprop="headline">dp小结</h1>
+        <h1 class="header-title" itemprop="headline">Hello World</h1>
           <div class="post-meta">
-            <time>Mar 15, 2026</time>
+            <time>Mar 16, 2026</time>
             <span itemprop="author">
               <span itemprop="name">Bojack Ma</span>
             </span>
           </div>
         </header>
 
-          <div class="page-content"><p>dp 数组的本质：是把“原问题”拆成一系列“更小但结构相同的子问题”。dp[i] 或 dp[i][j] 只是用来表示“一个子问题的答案”。</p>
-<h3 id="什么时候用dp？"><a href="#什么时候用dp？" class="headerlink" title="什么时候用dp？"></a>什么时候用dp？</h3><p>所有关键是定义子问题到底是什么。如果子问题被频繁计算、 子问题的最优解能组成原问题的最优解，那么就可以用dp。</p>
-<h3 id="dp的三种类型"><a href="#dp的三种类型" class="headerlink" title="dp的三种类型"></a>dp的三种类型</h3><p>dp有三种类型：</p>
-<ul>
-<li>前缀型 DP（范式A）。dp[i]表示前 i 个元素的答案。dp[i][j]表示前 i 和前 j 的答案。<strong>直接以目标答案作为dp。前缀型 DP &#x3D; 从左往右构建答案，像拼积木。</strong></li>
-</ul>
-<p><strong>这类问题有一个共同特征：你不关心最后到底选了哪个元素，只关心用了前面多少个元素后能达到什么结果。判断信号：问的是”能不能&#x2F;最多能&#x2F;最少要”，且每个元素的决策是独立的”选或不选”，不需要和下一个元素产生约束关系。</strong></p>
-<p>例如：139. 单词拆分。1143. 最长公共子序列。72. 编辑距离。</p>
-<ul>
-<li>结尾型 DP（范式B）。dp[i]表示以 i 结尾 的最优解。<strong>为什么要“以 i 结尾”？因为：子序列不连续，如果不用结尾限制，就会重复统计。所以要固定最后一个元素。结尾型 DP &#x3D; 把最后一个元素固定住</strong></li>
-</ul>
-<p><strong>这类问题的关键特征是：未来的决策依赖于你当前选的那个具体值。判断信号：转移方程需要知道”上一步选的具体是什么值”来判断当前能否衔接（递增&#x2F;递减&#x2F;相邻&#x2F;乘积符号等）。</strong></p>
-<p>例如：300. 最长递增子序列。152. 乘积最大子数组。</p>
-<ul>
-<li>容量型 DP（背包）（范式A）。本质也是前缀型 DP。只是背包问题把 第二维从“序列位置”换成了“容量”。前缀 DP（物品 + 容量）。前 i 个物品容量为 j时的最优解。1143. 最长公共子序列。dp[i][j]是text1 前 i，text2 前 j。而背包是dp[i][j]前 i 个物品容量 j。本质上：都是在处理两个维度的前缀。</li>
-</ul>
-<p>例如：416 分割等和子集。</p>
-<h3 id="面试如何确定dp？这个特别重要"><a href="#面试如何确定dp？这个特别重要" class="headerlink" title="面试如何确定dp？这个特别重要"></a>面试如何确定dp？这个特别重要</h3><p>如何在面试中快速确定 dp 定义？</p>
-<p>第一步：确认是否是 DP（问最值&#x2F;计数&#x2F;可行性 + 能分解为最优解子问题 + 有重叠子问题）。</p>
-<p>第二步：看涉及几个序列。两个序列 → 大概率是 dp[i][j]，用”前 i &#x2F; 前 j”的范式A。</p>
-<p>第三步：如果只有一个序列，问自己——“转移时，我需要知道上一步选的是哪个具体元素吗？”需要 → 范式B（以 i 结尾）；不需要 → 范式A（前 i 个）。</p>
-<p>第四步：如果范式B发现信息不够（比如 152 题只记最大值不够，还要记最小值），就增加状态维度，但 dp[i] 的”以 i 结尾”这个核心定义不变。</p>
-<blockquote>
-<p>139. 单词拆分。给你一个字符串 s 和一个字符串列表 wordDict 作为字典。如果可以利用字典中出现的一个或多个单词拼接出 s 则返回 true。<br>这个题目的dp数组是dp[i]表示前 i 个字符能不能被字典里的单词拼出来，是以目标单词的前 i 个字符进行判断。</p>
-</blockquote>
-<blockquote>
-<p>300. 最长递增子序列。给你一个整数数组 nums ，找到其中最长严格递增子序列的长度。子序列 是由数组派生而来的序列，删除（或不删除）数组中的元素而不改变其余元素的顺序。例如，[3,6,2,7] 是数组 [0,3,1,6,2,2,7] 的子序列。<br>这个题目的dp数组是dp[i]表示nums[i] 结尾的最长上升子序列的长度，是以nums[i] 结尾。</p>
-</blockquote>
-<blockquote>
-<p>152. 乘积最大子数组。给你一个整数数组 nums ，请你找出数组中乘积最大的非空连续 子数组（该子数组中至少包含一个数字），并返回该子数组所对应的乘积。这里的dp是minDp表示以 nums[i] 结尾的 最小乘积，maxDp以 nums[i] 结尾的 最大乘积。</p>
-</blockquote>
-<blockquote>
-<p>416. 分割等和子集。给你一个 只包含正整数 的 非空 数组 nums 。请你判断是否可以将这个数组分割成两个子集，使得两个子集的元素和相等。这就是经典的“0-1 背包”问题：每个数字只能选一次，目标容量是 sum&#x2F;2。</p>
-</blockquote>
-<blockquote>
-<p>1143. 最长公共子序列。给定两个字符串 text1 和 text2，返回这两个字符串的最长 公共子序列 的长度。如果不存在 公共子序列 ，返回 0 。一个字符串的 子序列 是指这样一个新的字符串：它是由原字符串在不改变字符的相对顺序的情况下删除某些字符（也可以不删除任何字符）后组成的新字符串。<br>dp[i][j]表示text1 前 i 个字符 和 text2 前 j 个字符的最长公共子序列长度。</p>
-</blockquote>
-<blockquote>
-<p>72. 编辑距离。给你两个单词 word1 和 word2， 请返回将 word1 转换成 word2 所使用的最少操作数  。dp[i][j]：word1 前 i 个字符 转换成 word2 前 j 个字符的最少操作数</p>
-</blockquote>
+          <div class="page-content"><p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
+<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
+<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
+<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
+<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
 </div>
           <nav class="post-nav">
     
-    <a class="post-nav-item post-nav-next" href="/2026/03/14/72-%E7%BC%96%E8%BE%91%E8%B7%9D%E7%A6%BB/">
+    <a class="post-nav-item post-nav-next" href="/2026/03/15/763-%E5%88%92%E5%88%86%E5%AD%97%E6%AF%8D%E5%8C%BA%E9%97%B4/">
       <div class="nav-arrow">&lt;&nbsp;OLDER</div>
-      <span class="post-title">72. 编辑距离</span>
+      <span class="post-title">763. 划分字母区间</span>
     </a>
     
     
-    <a class="post-nav-item post-nav-prev" href="/2026/03/15/121-%E4%B9%B0%E5%8D%96%E8%82%A1%E7%A5%A8%E7%9A%84%E6%9C%80%E4%BD%B3%E6%97%B6%E6%9C%BA/">
+    <a class="post-nav-item post-nav-prev" href="/2026/03/16/35-%E6%90%9C%E7%B4%A2%E6%8F%92%E5%85%A5%E4%BD%8D%E7%BD%AE/">
       <div class="nav-arrow">NEWER&nbsp;&gt;</div>
-      <span class="post-title">121. 买卖股票的最佳时机</span>
+      <span class="post-title">35. 搜索插入位置</span>
     </a>
     
 </nav>
