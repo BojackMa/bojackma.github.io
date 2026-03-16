@@ -270,7 +270,7 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
           </div>
         </header>
 
-          <div class="page-content"><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">二分查找的模版</span><br><span class="line">1、循环条件是while(left &lt;= right)，直到right &lt; left</span><br><span class="line">2、right   指向最后一个 &lt; target 的位置      left 指向第一个 ≥ target 的位置</span><br><span class="line"></span><br><span class="line">相当于这是，这是 C++ 的 lower_bound 手写版</span><br></pre></td></tr></table></figure>
+          <div class="page-content"><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">二分查找的模版</span><br><span class="line">1、循环条件是while(left &lt;= right)，直到right &lt; left</span><br><span class="line">2、right   指向最后一个 &lt; target 的位置      left 指向第一个 ≥ target 的位置(这个要死记硬背的！！！)</span><br><span class="line"></span><br><span class="line">相当于这是，这是 C++ 的 lower_bound 手写版</span><br></pre></td></tr></table></figure>
 
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    int searchInsert(vector&lt;int&gt;&amp; nums, int target) &#123;</span><br><span class="line">        int left = 0;</span><br><span class="line">        int right = nums.size() - 1;</span><br><span class="line">        int mid;</span><br><span class="line"></span><br><span class="line">        while(left &lt;= right)&#123;</span><br><span class="line">            mid = left + (right - left) / 2;</span><br><span class="line">            if(nums[mid] == target)     return mid;</span><br><span class="line">            else if(nums[mid] &gt; target) right = mid - 1;</span><br><span class="line">            else left = mid + 1;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        return left;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
 </div>
@@ -281,6 +281,11 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
       <span class="post-title">Hello World</span>
     </a>
     
+    
+    <a class="post-nav-item post-nav-prev" href="/2026/03/16/74-%E6%90%9C%E7%B4%A2%E4%BA%8C%E7%BB%B4%E7%9F%A9%E9%98%B5/">
+      <div class="nav-arrow">NEWER&nbsp;&gt;</div>
+      <span class="post-title">74. 搜索二维矩阵</span>
+    </a>
     
 </nav>
 
