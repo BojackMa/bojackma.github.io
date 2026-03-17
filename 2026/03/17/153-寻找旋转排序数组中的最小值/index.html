@@ -15,7 +15,7 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Archives - Bojack Ma</title>
+<title>153. 寻找旋转排序数组中的最小值 - Bojack Ma</title>
 
   <link rel="icon" href="/img/favicon.ico">
 
@@ -238,7 +238,7 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
             
             
             
-            <a class="menu-link active" href="/archives/"> Archives</a>
+            <a class="menu-link " href="/archives/"> Archives</a>
           
             
             
@@ -253,196 +253,36 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
     </nav>
   </div>
   
+<div class="wrapper post">
+  <main class="page-content" aria-label="Content">
+      <header class="header">
+        
+          <div class="tags">
+            <a href="/tags/%E7%AE%97%E6%B3%95/" class="tag"># 算法</a><a href="/tags/%E4%BA%8C%E5%88%86%E6%9F%A5%E6%89%BE/" class="tag"># 二分查找</a>
+          </div>
+        
+        <h1 class="header-title" itemprop="headline">153. 寻找旋转排序数组中的最小值</h1>
+          <div class="post-meta">
+            <time>Mar 17, 2026</time>
+            <span itemprop="author">
+              <span itemprop="name">Bojack Ma</span>
+            </span>
+          </div>
+        </header>
 
-<div class="wrapper">
-  <main class="page-content">
-    <header class="header">
-      <h1 class="header-title center">Archives</h1>
-    </header>
+          <div class="page-content"><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">//经典的思路：选择二分，总有一个区间是递增的，那个区间就比较好取最小值，然后取处理另一个区间</span><br><span class="line">//不一定一定要找最小值，但是可以把所有的可能的最小值找到！！！</span><br><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    int findMin(vector&lt;int&gt;&amp; nums) &#123;</span><br><span class="line">        int left = 0; int right = nums.size() - 1;</span><br><span class="line">        int ans = 5005;</span><br><span class="line">        while(left &lt;= right)&#123;</span><br><span class="line">            int mid = left + (right - left) / 2;</span><br><span class="line">            //说明前面是有序区间</span><br><span class="line">            if(nums[mid] &gt;= nums[left])&#123;</span><br><span class="line">                ans = min(ans, nums[left]);</span><br><span class="line">                left = mid + 1;</span><br><span class="line">            &#125;</span><br><span class="line">            else&#123;</span><br><span class="line">                ans = min(ans, nums[mid]);</span><br><span class="line">                right = mid - 1;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return ans;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></div>
+          <nav class="post-nav">
+    
+    <a class="post-nav-item post-nav-next" href="/2026/03/17/33-%E6%90%9C%E7%B4%A2%E6%97%8B%E8%BD%AC%E6%8E%92%E5%BA%8F%E6%95%B0%E7%BB%84/">
+      <div class="nav-arrow">&lt;&nbsp;OLDER</div>
+      <span class="post-title">33. 搜索旋转排序数组</span>
+    </a>
     
     
-      
-      
-      <h2 class="list-year">2026<svg xml="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" class="icon"><path d="M455 526q-1-23-23-28 0-21 10-21 8 0-9-10-27-18-45-18-14 0-2-15 9-13 18-13 9-1-17-16t-39-15q-15 1-5-15 7-11 15-13 7-1-10-9-38-22-51-21 0 3 4 22 4 18 15 49 12 31 28 58 16 28 46 48 30 19 65 17zm440 320q-8-3-18-3-11 0-17-1t-9-3-5-10-10-26q-9-17-22-35-13-19-23-34-11-16-18-19-6-3-12-23-6-18-17-52-10-32-20-52-5-9-13-15-9-6-19-10t-25-7q-16-3-31-4t-37-1q-21 0-43-2h-48q-29 0-53-1-42-1-76-27-34-27-54-61-21-33-33-72t-19-61q-6-21-5-25-1-5-10-7-5 1-8 10t-4 18-2 9q-1 3-27 21-62 20-87 59-12 13-18 33-7 21-1 37 5 16 20 19t31-5q15-8 23-18 3-4 9-10 10 3 24 0 14-4 24-8 3-1 9-4 16 3 24 35 9 32 10 64v30q-3 5-9 21-3 11-11 35-6 19-10 36-4 18-8 30-2 4-4 12-15 12-44 36-30 25-53 48-22 24-27 27-7 9-10 16-4 8-5 20v1q0 11 15 15 21 10 38 1 16-8 27-24 12-17 17-30t5-18q-1-2 2-3t6-4q3-2 7-1t7-1h2q21-3 42-13 22-10 37-21 16-12 29-25t19-20q3-3 8-9 27 22 87 23 59 1 101-7t46-11q81 57 171 68 13 41 60 87 45 43 63 43h2q10-1 15-17 3-9 3-18 0-8-2-15-4-16-16-21zM237 402q-4 4-11 2t-11-5-9-8q4-8 11-13h4q13 3 18 10 4 7-2 14zm590 184q1 1 3 4l7 7q2 1 8 7 6 5 11 6t12 5q17 2 18-16 1-19-14-24-10-3-11-20-1-18-2-20-3-3-17-1-8 1-25 3-10 1-17-5-2-1-4-6t-4-6-7 0q-4 1-11 6-10 6-25 12-9 4-26 10-3 1-10 4-2 17 15 25t39 8q21 0 40 1 18 1 20 0z"/>" class="icon"></svg></h2>
-      
-      <article class="post-item">
-        <h3 class="post-item-title">
-          <a href="/2026/03/17/153-%E5%AF%BB%E6%89%BE%E6%97%8B%E8%BD%AC%E6%8E%92%E5%BA%8F%E6%95%B0%E7%BB%84%E4%B8%AD%E7%9A%84%E6%9C%80%E5%B0%8F%E5%80%BC/">
-            153. 寻找旋转排序数组中的最小值
-          </a>
-        </h3>
-      </article>
-    
-      
-      
-      <article class="post-item">
-        <h3 class="post-item-title">
-          <a href="/2026/03/17/33-%E6%90%9C%E7%B4%A2%E6%97%8B%E8%BD%AC%E6%8E%92%E5%BA%8F%E6%95%B0%E7%BB%84/">
-            33. 搜索旋转排序数组
-          </a>
-        </h3>
-      </article>
-    
-      
-      
-      <article class="post-item">
-        <h3 class="post-item-title">
-          <a href="/2026/03/17/34-%E5%9C%A8%E6%8E%92%E5%BA%8F%E6%95%B0%E7%BB%84%E4%B8%AD%E6%9F%A5%E6%89%BE%E5%85%83%E7%B4%A0%E7%9A%84%E7%AC%AC%E4%B8%80%E4%B8%AA%E5%92%8C%E6%9C%80%E5%90%8E%E4%B8%80%E4%B8%AA%E4%BD%8D%E7%BD%AE/">
-            34. 在排序数组中查找元素的第一个和最后一个位置
-          </a>
-        </h3>
-      </article>
-    
-      
-      
-      <article class="post-item">
-        <h3 class="post-item-title">
-          <a href="/2026/03/17/hello-world/">
-            Hello World
-          </a>
-        </h3>
-      </article>
-    
-      
-      
-      <article class="post-item">
-        <h3 class="post-item-title">
-          <a href="/2026/03/16/%E8%B1%86%E5%8C%85%E6%89%8B%E6%9C%BA%E5%8A%A9%E6%89%8B%E5%88%9D%E6%AD%A5%E6%8E%A2%E7%B4%A2/">
-            豆包手机助手初步
-          </a>
-        </h3>
-      </article>
-    
-      
-      
-      <article class="post-item">
-        <h3 class="post-item-title">
-          <a href="/2026/03/16/%E7%AC%94%E8%AF%95%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E6%A8%A1%E7%89%88/">
-            笔试输入输出模版
-          </a>
-        </h3>
-      </article>
-    
-      
-      
-      <article class="post-item">
-        <h3 class="post-item-title">
-          <a href="/2026/03/16/74-%E6%90%9C%E7%B4%A2%E4%BA%8C%E7%BB%B4%E7%9F%A9%E9%98%B5/">
-            74. 搜索二维矩阵
-          </a>
-        </h3>
-      </article>
-    
-      
-      
-      <article class="post-item">
-        <h3 class="post-item-title">
-          <a href="/2026/03/16/35-%E6%90%9C%E7%B4%A2%E6%8F%92%E5%85%A5%E4%BD%8D%E7%BD%AE/">
-            35. 搜索插入位置
-          </a>
-        </h3>
-      </article>
-    
-      
-      
-      <article class="post-item">
-        <h3 class="post-item-title">
-          <a href="/2026/03/15/763-%E5%88%92%E5%88%86%E5%AD%97%E6%AF%8D%E5%8C%BA%E9%97%B4/">
-            763. 划分字母区间
-          </a>
-        </h3>
-      </article>
-    
-      
-      
-      <article class="post-item">
-        <h3 class="post-item-title">
-          <a href="/2026/03/15/45-%E8%B7%B3%E8%B7%83%E6%B8%B8%E6%88%8F-II/">
-            45. 跳跃游戏 II
-          </a>
-        </h3>
-      </article>
-    
-      
-      
-      <article class="post-item">
-        <h3 class="post-item-title">
-          <a href="/2026/03/15/55-%E8%B7%B3%E8%B7%83%E6%B8%B8%E6%88%8F/">
-            55. 跳跃游戏
-          </a>
-        </h3>
-      </article>
-    
-      
-      
-      <article class="post-item">
-        <h3 class="post-item-title">
-          <a href="/2026/03/15/121-%E4%B9%B0%E5%8D%96%E8%82%A1%E7%A5%A8%E7%9A%84%E6%9C%80%E4%BD%B3%E6%97%B6%E6%9C%BA/">
-            121. 买卖股票的最佳时机
-          </a>
-        </h3>
-      </article>
-    
-      
-      
-      <article class="post-item">
-        <h3 class="post-item-title">
-          <a href="/2026/03/15/dp%E5%B0%8F%E7%BB%93/">
-            dp小结
-          </a>
-        </h3>
-      </article>
-    
-      
-      
-      <article class="post-item">
-        <h3 class="post-item-title">
-          <a href="/2026/03/14/72-%E7%BC%96%E8%BE%91%E8%B7%9D%E7%A6%BB/">
-            72. 编辑距离
-          </a>
-        </h3>
-      </article>
-    
-      
-      
-      <article class="post-item">
-        <h3 class="post-item-title">
-          <a href="/2026/03/14/1143-%E6%9C%80%E9%95%BF%E5%85%AC%E5%85%B1%E5%AD%90%E5%BA%8F%E5%88%97/">
-            1143. 最长公共子序列
-          </a>
-        </h3>
-      </article>
-    
-
-    
-<nav class="paginator" aria-label="Archive pagination">
-  
-    <span class="paginator-item paginator-prev disabled">&lsaquo; Newer</span>
-  
-
-  
-    
-      <span class="paginator-item paginator-page current">1</span>
-    
-  
-    
-      <a class="paginator-item paginator-page" href="/archives/page/2/">2</a>
-    
-  
-    
-      <a class="paginator-item paginator-page" href="/archives/page/3/">3</a>
-    
-  
-
-  
-    <a class="paginator-item paginator-next" href="/archives/page/2/">Older &rsaquo;</a>
-  
 </nav>
 
-
-  </main>
+   </main>
 </div>
-
 
   <footer class="footer">
     <small class="footer_copyright">
