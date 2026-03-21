@@ -270,7 +270,8 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
           </div>
         </header>
 
-          <div class="page-content"><p>dp 数组的本质：是把“原问题”拆成一系列“更小但结构相同的子问题”。dp[i] 或 dp[i][j] 只是用来表示“一个子问题的答案”。</p>
+          <div class="page-content"><p>题外话：分治就是将问题拆小，动态规划就是分治，但是区别在于他有大量重复的子问题，因此需要用记忆</p>
+<p>dp 数组的本质：是把“原问题”拆成一系列“更小但结构相同的子问题”。dp[i] 或 dp[i][j] 只是用来表示“一个子问题的答案”。</p>
 <h3 id="什么时候用dp？"><a href="#什么时候用dp？" class="headerlink" title="什么时候用dp？"></a>什么时候用dp？</h3><p>所有关键是定义子问题到底是什么。如果子问题被频繁计算、 子问题的最优解能组成原问题的最优解，那么就可以用dp。</p>
 <h3 id="dp的三种类型"><a href="#dp的三种类型" class="headerlink" title="dp的三种类型"></a>dp的三种类型</h3><p>dp有三种类型：</p>
 <ul>
