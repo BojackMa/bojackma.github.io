@@ -15,7 +15,7 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title> - Bojack Ma</title>
+<title>438. 找到字符串中所有字母异位词 - Bojack Ma</title>
 
   <link rel="icon" href="/img/favicon.ico">
 
@@ -253,98 +253,36 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
     </nav>
   </div>
   
-  <div class="wrapper">
-    <div class="author">
-        <div class="author-avatar-wrapper">
-          <img
-            class="author-avatar"
-            src="img/shark.png"
-            alt="avatar"
-            loading="lazy"
-          />
-      </div>
-      <h2 class="author-name">Bojack Ma</h2>
-      <p class="author-bio">In an age of AI, striving to keep the &#39;I&#39; authentic...</p>
-    </div>
-    <main aria-label="Content">
-      
+<div class="wrapper post">
+  <main class="page-content" aria-label="Content">
+      <header class="header">
+        
+          <div class="tags">
+            <a href="/tags/%E7%AE%97%E6%B3%95/" class="tag"># 算法</a><a href="/tags/%E6%BB%91%E5%8A%A8%E6%95%B0%E7%BB%84/" class="tag"># 滑动数组</a>
+          </div>
+        
+        <h1 class="header-title" itemprop="headline">438. 找到字符串中所有字母异位词</h1>
+          <div class="post-meta">
+            <time>Mar 21, 2026</time>
+            <span itemprop="author">
+              <span itemprop="name">Bojack Ma</span>
+            </span>
+          </div>
+        </header>
 
-    <h3 class="posts-item-note" aria-label="Recent Posts">Recent Posts</h3>
+          <div class="page-content"><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">public:</span><br><span class="line">    vector&lt;int&gt; findAnagrams(string s, string p) &#123;</span><br><span class="line">        multiset&lt;char&gt; standard;</span><br><span class="line">        multiset&lt;char&gt; compare;</span><br><span class="line"></span><br><span class="line">        for(auto pp : p)    standard.insert(pp);</span><br><span class="line"></span><br><span class="line">        int left = 0;</span><br><span class="line">        int right = p.size() - 1;</span><br><span class="line"></span><br><span class="line">        vector&lt;int&gt; ans;</span><br><span class="line">        if(s.size() &lt; p.size()) return ans;</span><br><span class="line">        for(int i = 0; i &lt; p.size(); i++)  &#123;</span><br><span class="line">            compare.insert(s[i]);</span><br><span class="line">        &#125; </span><br><span class="line"></span><br><span class="line">        while(1)&#123;</span><br><span class="line">            if(compare == standard) &#123;</span><br><span class="line">                ans.emplace_back(left);</span><br><span class="line">            &#125;</span><br><span class="line">            compare.erase(compare.find(s[left]));</span><br><span class="line">            left++;</span><br><span class="line">            right++;</span><br><span class="line">            if(right == s.size())   break;</span><br><span class="line">            compare.insert(s[right]);</span><br><span class="line">        &#125;</span><br><span class="line">        return ans;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+          <nav class="post-nav">
     
-      <article class="post-item">
-        <span class="post-item-date" datetime="2026-03-13T22:04:03.000Z">Mar 13, 2026</span>
-        <h4 class="post-item-title">
-          <a href="/2026/03/13/322-%E9%9B%B6%E9%92%B1%E5%85%91%E6%8D%A2/">322. 零钱兑换</a>
-        </h4>
-      </article>
+    <a class="post-nav-item post-nav-next" href="/2026/03/21/3-%E6%97%A0%E9%87%8D%E5%A4%8D%E5%AD%97%E7%AC%A6%E7%9A%84%E6%9C%80%E9%95%BF%E5%AD%90%E4%B8%B2/">
+      <div class="nav-arrow">&lt;&nbsp;OLDER</div>
+      <span class="post-title">3. 无重复字符的最长子串</span>
+    </a>
     
-      <article class="post-item">
-        <span class="post-item-date" datetime="2026-03-13T21:34:46.000Z">Mar 13, 2026</span>
-        <h4 class="post-item-title">
-          <a href="/2026/03/13/279-%E5%AE%8C%E5%85%A8%E5%B9%B3%E6%96%B9%E6%95%B0/">279. 完全平方数</a>
-        </h4>
-      </article>
     
-      <article class="post-item">
-        <span class="post-item-date" datetime="2026-03-13T20:50:43.000Z">Mar 13, 2026</span>
-        <h4 class="post-item-title">
-          <a href="/2026/03/13/198-%E6%89%93%E5%AE%B6%E5%8A%AB%E8%88%8D/">198. 打家劫舍</a>
-        </h4>
-      </article>
-    
-      <article class="post-item">
-        <span class="post-item-date" datetime="2026-03-13T20:45:30.000Z">Mar 13, 2026</span>
-        <h4 class="post-item-title">
-          <a href="/2026/03/13/118-%E6%9D%A8%E8%BE%89%E4%B8%89%E8%A7%92/">118. 杨辉三角</a>
-        </h4>
-      </article>
-    
-      <article class="post-item">
-        <span class="post-item-date" datetime="2026-03-13T20:09:35.000Z">Mar 13, 2026</span>
-        <h4 class="post-item-title">
-          <a href="/2026/03/13/70-%E7%88%AC%E6%A5%BC%E6%A2%AF/">70. 爬楼梯</a>
-        </h4>
-      </article>
-    
-      <article class="post-item">
-        <span class="post-item-date" datetime="2026-03-13T14:11:31.000Z">Mar 13, 2026</span>
-        <h4 class="post-item-title">
-          <a href="/2026/03/13/31-%E4%B8%8B%E4%B8%80%E4%B8%AA%E6%8E%92%E5%88%97/">31. 下一个排列</a>
-        </h4>
-      </article>
-    
-      <article class="post-item">
-        <span class="post-item-date" datetime="2026-03-13T13:58:35.000Z">Mar 13, 2026</span>
-        <h4 class="post-item-title">
-          <a href="/2026/03/13/75-%E9%A2%9C%E8%89%B2%E5%88%86%E7%B1%BB/">75. 颜色分类</a>
-        </h4>
-      </article>
-    
-      <article class="post-item">
-        <span class="post-item-date" datetime="2026-03-13T13:28:26.000Z">Mar 13, 2026</span>
-        <h4 class="post-item-title">
-          <a href="/2026/03/13/169-%E5%A4%9A%E6%95%B0%E5%85%83%E7%B4%A0/">169. 多数元素</a>
-        </h4>
-      </article>
-    
-      <article class="post-item">
-        <span class="post-item-date" datetime="2026-03-13T12:42:55.000Z">Mar 13, 2026</span>
-        <h4 class="post-item-title">
-          <a href="/2026/03/13/136-%E5%8F%AA%E5%87%BA%E7%8E%B0%E4%B8%80%E6%AC%A1%E7%9A%84%E6%95%B0%E5%AD%97/">136. 只出现一次的数字</a>
-        </h4>
-      </article>
-    
-      <article class="post-item">
-        <span class="post-item-date" datetime="2026-03-13T12:12:14.000Z">Mar 13, 2026</span>
-        <h4 class="post-item-title">
-          <a href="/2026/03/13/128-%E6%9C%80%E9%95%BF%E8%BF%9E%E7%BB%AD%E5%BA%8F%E5%88%97/">128.最长连续序列</a>
-        </h4>
-      </article>
-    
+</nav>
 
-
-    </main>
-  </div>
+   </main>
+</div>
 
   <footer class="footer">
     <small class="footer_copyright">
