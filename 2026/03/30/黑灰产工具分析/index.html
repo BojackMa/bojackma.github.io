@@ -1,0 +1,427 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- var pageTitle = page.title || config.subtitle || '';
+if (is_archive()) pageTitle = ' Archives ';
+if (is_tag()) pageTitle = 'Tag: ' + page.tag;
+if (is_category()) pageTitle = 'Category: ' + page.category;
+if (is_month()) pageTitle += ': ' + page.month + '/' + page.year;
+if (is_year()) pageTitle += ': ' + page.year;
+pageTitle += ' [ ' + config.title + ' ]'; -->
+
+
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>黑灰产人脸注入工具分析 - Bojack Ma</title>
+
+  <link rel="icon" href="/img/favicon.ico">
+
+
+    <meta name="author" content="Bojack Ma">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml " title="Bojack Ma" type="application/atom+xml">
+
+
+  
+    <link rel="stylesheet" href="/css/main.css">
+  
+
+<meta name="generator" content="Hexo 7.0.0"></head>
+  <body data-theme="light" class="notransition">
+    <script>
+      const body = document.body;
+      const data = body.getAttribute("data-theme");
+      const initTheme = (state) => {
+        if (state === "dark") {
+          body.setAttribute("data-theme", "dark");
+        } else if (state === "light") {
+          body.removeAttribute("data-theme");
+        } else {
+          localStorage.setItem("theme", data);
+        }
+      };
+   
+      initTheme(localStorage.getItem("theme"));
+      
+      setTimeout(() => body.classList.remove("notransition"), 75);
+    </script>
+  <div class="navbar" role="navigation">
+    <nav class="menu">
+      <input type="checkbox" id="menu-trigger" class="menu-trigger" />
+      <label for="menu-trigger">
+        <span class="menu-icon">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 512 512"
+          >
+            <path
+              d="M64,384H448V341.33H64Zm0-106.67H448V234.67H64ZM64,128v42.67H448V128Z"
+            />
+          </svg>
+        </span>
+      </label>
+      <a id="mode">
+        <svg
+          class="mode-sunny"
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 512 512"
+        >
+          <title>LIGHT</title>
+          <line
+            x1="256"
+            y1="48"
+            x2="256"
+            y2="96"
+            style="stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"
+          />
+          <line
+            x1="256"
+            y1="416"
+            x2="256"
+            y2="464"
+            style="stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"
+          />
+          <line
+            x1="403.08"
+            y1="108.92"
+            x2="369.14"
+            y2="142.86"
+            style="stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"
+          />
+          <line
+            x1="142.86"
+            y1="369.14"
+            x2="108.92"
+            y2="403.08"
+            style="stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"
+          />
+          <line
+            x1="464"
+            y1="256"
+            x2="416"
+            y2="256"
+            style="stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"
+          />
+          <line
+            x1="96"
+            y1="256"
+            x2="48"
+            y2="256"
+            style="stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"
+          />
+          <line
+            x1="403.08"
+            y1="403.08"
+            x2="369.14"
+            y2="369.14"
+            style="stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"
+          />
+          <line
+            x1="142.86"
+            y1="142.86"
+            x2="108.92"
+            y2="108.92"
+            style="stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"
+          />
+          <circle
+            cx="256"
+            cy="256"
+            r="80"
+            style="stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"
+          />
+        </svg>
+        <svg
+          class="mode-moon"
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 512 512"
+        >
+          <title>DARK</title>
+          <line
+            x1="256"
+            y1="48"
+            x2="256"
+            y2="96"
+            style="stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"
+          />
+          <line
+            x1="256"
+            y1="416"
+            x2="256"
+            y2="464"
+            style="stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"
+          />
+          <line
+            x1="403.08"
+            y1="108.92"
+            x2="369.14"
+            y2="142.86"
+            style="stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"
+          />
+          <line
+            x1="142.86"
+            y1="369.14"
+            x2="108.92"
+            y2="403.08"
+            style="stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"
+          />
+          <line
+            x1="464"
+            y1="256"
+            x2="416"
+            y2="256"
+            style="stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"
+          />
+          <line
+            x1="96"
+            y1="256"
+            x2="48"
+            y2="256"
+            style="stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"
+          />
+          <line
+            x1="403.08"
+            y1="403.08"
+            x2="369.14"
+            y2="369.14"
+            style="stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"
+          />
+          <line
+            x1="142.86"
+            y1="142.86"
+            x2="108.92"
+            y2="108.92"
+            style="stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"
+          />
+          <circle
+            cx="256"
+            cy="256"
+            r="80"
+            style="stroke-linecap:round;stroke-miterlimit:10;stroke-width:32px"
+          />
+        </svg>
+      </a>
+      <div class="trigger">
+        <div class="trigger-container">
+          
+            
+            
+            
+            
+            
+            
+            <a class="menu-link " href="/"> Home</a>
+          
+            
+            
+            
+            
+            
+            
+            <a class="menu-link " href="/about/"> About</a>
+          
+            
+            
+            
+            
+            
+            
+            <a class="menu-link " href="/archives/"> Archives</a>
+          
+            
+            
+            
+            
+            
+            
+            <a class="menu-link " href="/tags/"> Tags</a>
+          
+        </div>
+      </div>
+    </nav>
+  </div>
+  
+<div class="wrapper post">
+  <main class="page-content" aria-label="Content">
+      <header class="header">
+        
+          <div class="tags">
+            <a href="/tags/%E4%BA%BA%E8%84%B8/" class="tag"># 人脸</a><a href="/tags/%E9%BB%91%E7%81%B0%E4%BA%A7/" class="tag"># 黑灰产</a>
+          </div>
+        
+        <h1 class="header-title" itemprop="headline">黑灰产人脸注入工具分析</h1>
+          <div class="post-meta">
+            <time>Mar 30, 2026</time>
+            <span itemprop="author">
+              <span itemprop="name">Bojack Ma</span>
+            </span>
+          </div>
+        </header>
+
+          <div class="page-content"><p>1、技术实现与注入原理</p>
+<p>劫持原理？</p>
+<p>需要的权限级别（root&#x2F;越狱 vs. 免root方案）？</p>
+<p>是否针对app有优化？</p>
+<p>如何实现推流？</p>
+<p>防御思路？</p>
+<h2 id="1、andvipgroup-VCamera"><a href="#1、andvipgroup-VCamera" class="headerlink" title="1、andvipgroup&#x2F;VCamera"></a>1、andvipgroup&#x2F;VCamera</h2><p><a target="_blank" rel="noopener" href="https://github.com/andvipgroup/VCamera?tab=readme-ov-file">https://github.com/andvipgroup/VCamera?tab=readme-ov-file</a></p>
+<p>原理：</p>
+<p>使用了一个黑灰产WaxMoon&#x2F;opensdk 虚拟化框架，本质上是类似 VirtualApp 的应用级沙盒技术，因此不需要root。</p>
+<p>根据作者的介绍，opensdk的原理是：把整个“目标 App”运行在一个虚拟的运行时环境里。和老 VirtualApp、BlackBox 等同类思路，不同的是放弃了java动态代理，service、receiver、provider等Binder组件全部由MultiApp引擎自己维护。VirtualApp 类方案依赖 Java 动态代理的方案来保证虚拟进程正常运行。这样的问题是：如果被虚拟的第三方 App 也使用了 Java 动态代理，两者就会相互覆盖，导致目标 App 的运行时逻辑被意外篡改。</p>
+<blockquote>
+<p>Java 动态代理：Android 系统里，App 和系统服务（比如摄像头服务、Activity 管理服务）之间通过 Binder 通信。你可以把 Binder 想象成一根”电话线”，App 通过它打电话给系统服务。<br>Java 动态代理的作用就是：在这根电话线上接一个”中间人”，所有通话都先经过中间人，中间人可以偷听、修改、转发。<br>VirtualApp 就是这么干的——它在 App 和系统之间插入自己的代理，拦截所有系统调用，从而控制 App 的行为。</p>
+</blockquote>
+<p>opensdk：在目标 App 跑起来之前，把目标app和要通信的camera server这个 service偷偷换掉，也就是确保其拿到的都是假服务的指针（native层）。同时，为了对抗 360 加固（ 360 加固会在 Native 层做反 Hook 检测），opensdk 利用bpf在系统调用入口（svc 指令）拦截，实现更加全面。</p>
+<p>具体实现原理：</p>
+<p>opensdk 在 attachBaseContext加载虚拟引擎HackRuntime.install();  </p>
+<p>用 DexClassLoader 动态加载引擎moon.jar。</p>
+<p>引擎接管后，使用 Pine（或类似 ART Hook 框架）对 Android Framework 关键部分进行 Hook。</p>
+<p>Hook 的目标包括：</p>
+<p>PackageManager（PMS）、ActivityManager（AMS）、文件系统相关的东西。</p>
+<p>具体的camera service端是在virtual.camera.camera:camera:1.0.0（闭源 AAR）实现，目前没有开源，估计可以通过下载apk进行逆向来观察。</p>
+<p>防御思路：</p>
+<p>1、应用可以通过路径检测判断是否在沙盒运行，主动拒绝服务。</p>
+<p>把验证逻辑放到系统服务那一侧，或者使用内核直接返回的数据，用户态沙盒就没有办法了，例如向真正的 PackageManagerService 询问当前包名对应的 UID，和 Process.myUid() 对比。</p>
+<p>调用栈里面有没有宿主名</p>
+<p>有没有特征文件路径</p>
+<p>Maps 文件里是否有可疑路径</p>
+<p>查看特定的文件路径，观察是否有异常：尝试打开某个文件或检查 &#x2F;proc&#x2F;self&#x2F;maps、文件是否存在等，如果路径特征不对，就能判断</p>
+<p>检查是否被hook</p>
+<p>2、从摄像头本身以及文件的角度去出发。参数扰动：分辨率固定，切换后立刻回到原分辨率</p>
+<p>局限性：</p>
+<p>在安卓9之前比较好用，现在安卓系统权限更加严格，并且opensdk可能版本较早，现在已经不行了。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">app/src/main/java/virtual/camera/app/</span><br><span class="line">│</span><br><span class="line">├── app/</span><br><span class="line">│   ├── App.kt                    ← 应用入口，继承 HackApplication</span><br><span class="line">│   └── AppManager.kt             ← SharedPreferences 管理</span><br><span class="line">│</span><br><span class="line">├── settings/</span><br><span class="line">│   └── MethodType.java           ← 摄像头输入模式枚举（1/2/3）</span><br><span class="line">│</span><br><span class="line">├── bean/</span><br><span class="line">│   ├── AppInfo.kt                ← 虚拟 App 数据模型</span><br><span class="line">│   ├── InstalledAppBean.kt       ← 安装状态模型</span><br><span class="line">│   ├── GmsBean.kt                ← GMS 包数据模型</span><br><span class="line">│   └── XpModuleInfo.kt           ← Xposed 模块模型</span><br><span class="line">│</span><br><span class="line">├── data/</span><br><span class="line">│   ├── AppsRepository.kt         ← App 发现/安装/排序（调用 HackApi）</span><br><span class="line">│   ├── GmsRepository.kt          ← GMS 管理</span><br><span class="line">│   └── XpRepository.kt           ← Xposed 模块管理</span><br><span class="line">│</span><br><span class="line">└── ...（UI/Utils 等）</span><br><span class="line"></span><br><span class="line">opensdk/                          ← git submodule，核心虚拟化引擎</span><br><span class="line">├── HackApplication.java          ← 宿主 App 必须继承的基类</span><br><span class="line">├── HackApi.java                  ← 对外暴露的所有操作 API</span><br><span class="line">├── HackRuntime.java              ← 引擎初始化入口</span><br><span class="line">└── Cmd.java                      ← 命令分发系统</span><br></pre></td></tr></table></figure>
+
+<h2 id="2、Xposed-Modules-Repo-com-example-vcam"><a href="#2、Xposed-Modules-Repo-com-example-vcam" class="headerlink" title="2、Xposed-Modules-Repo&#x2F;com.example.vcam"></a>2、Xposed-Modules-Repo&#x2F;com.example.vcam</h2><p><a target="_blank" rel="noopener" href="https://github.com/Xposed-Modules-Repo/com.example.vcam">https://github.com/Xposed-Modules-Repo/com.example.vcam</a></p>
+<p>劫持原理？</p>
+<p>需要的权限级别（root&#x2F;越狱 vs. 免root方案）？</p>
+<p>是否针对app有优化？</p>
+<p>如何实现推流？</p>
+<p>防御思路？</p>
+<p>原理：</p>
+<p>这是一个基于 Xposed&#x2F;LSPosed 框架的 Android 虚拟摄像头模块，核心思想是在目标 App 的进程中拦截摄像头 API 调用，把真实摄像头画面偷偷替换成用户指定的视频文件。<br>模块实现 IXposedHookLoadPackage 接口，在每个被选中的目标 App 进程启动时注入。所有 Hook 均通过 XposedHelpers.findAndHookMethod() 完成</p>
+<p>这个非常经典，它同时hook了预览流和捕获流（画面链（给人看的）或者数据链（给算法或者人脸识别用的））</p>
+<p>针对 Camera1，主要劫持两个核心链路：画面链（Surface）和数据链（PreviewCallback &#x2F; 拍照）</p>
+<p>1、setPreviewTexture &#x2F; setPreviewDisplay</p>
+<p>作用：App 指定摄像头预览输出的目标 Surface。</p>
+<p>Hook 行为：攻击者将 App 传入的 Surface 替换为一个自己创建的 fake SurfaceTexture。</p>
+<p>效果：App拿不到真实画面。</p>
+<p>2、startPreview</p>
+<p>作用：启动摄像头预览数据流。</p>
+<p>Hook 行为：启动 MediaPlayer、将本地视频（如 virtual.mp4）渲染到 App 原本的 Surface</p>
+<p>效果：用户看到假视频</p>
+<p>3、setPreviewCallback &#x2F; setPreviewCallbackWithBuffer</p>
+<p>作用：通过 onPreviewFrame(byte[] data) 向 App 提供每一帧原始数据（YUV）。</p>
+<p>Hook 行为：拦截回调、将 data 替换为视频解码得到的假帧</p>
+<p>效果：算法拿到假人脸数据</p>
+<p>4、takePicture</p>
+<p>作用：拍照并返回 JPEG 数据。</p>
+<p>Hook 行为：替换返回的图片数据（如固定 bmp &#x2F; jpeg）</p>
+<p>效果：拍照结果假图片</p>
+<p>Camera1 本质做了三件事：<br>    1.	截断真实画面（Surface）<br>    2.	用视频伪造显示<br>    3.	用视频帧伪造数据</p>
+<p>针对camera2，hook了以下的东西<br>camera2稍微复杂一点，引入了 Session 和请求流（Request）</p>
+<p>核心思路：控制所有 Surface 的流向</p>
+<p>1、openCamera → onOpened</p>
+<p>作用：打开摄像头，返回 CameraDevice</p>
+<p>Hook 行为：动态 hook StateCallback.onOpened，获取 CameraDevice，为后续劫持做准备，注意：这里还没有 Session</p>
+<p>2、createCaptureSession（核心）</p>
+<p>作用：创建 Session，并绑定输出 Surface 列表</p>
+<p>Camera → Surface列表</p>
+<p>Hook 行为：将 App 提供的 Surface 列表替换为：fake Surface</p>
+<p>效果：真实摄像头 → fake Surface → 无人消费 → 数据被丢弃</p>
+<p>本质：截断真实数据流（画面链 + 数据链）</p>
+<p>3、addTarget（CaptureRequest.Builder）</p>
+<p>作用：指定每个请求的输出目标（Surface &#x2F; ImageReader）</p>
+<p>Hook 行为：记录 App 原始 Surface，替换为 fake Surface</p>
+<p>同时：保存原始 previewSurface，用 MediaPlayer 渲染视频到该 Surface</p>
+<p>效果：用户看到假视频</p>
+<p>4、build &#x2F; 提交请求（触发注入）</p>
+<p>作用：正式启动数据流</p>
+<p>Hook 行为：<br>画面链：MediaPlayer → 渲染到 preview Surface<br>数据链：使用 VideoToFrames 解码视频，转成 NV21 &#x2F; JPEG，写入 ImageReader 的 Surface</p>
+<p>效果：App 从 ImageReader 获取：假帧</p>
+<p>视频解码管道<br>预览流：用系统 MediaPlayer 直接渲染到 Surface，性能最好。<br>捕获流（例如ImageReader）：调用自己研发的 VideoToFrames（H.264 硬解码），将每一帧解码为 NV21（YUV420sp）或 JPEG 格式，写入 ImageReader 的 Surface，这样 App 从 ImageReader.acquireLatestImage() 拿到的就是假帧。</p>
+<p>我根据这个做了一个xposed模块，然后用在了微信上，实现实时传输，但是这个版本比较粗糙，用的是adb协议，然后数据之间是以文件的形式传递，只能够单向传递640x480像素的文件，也就是480p，后来我改成了tcp协议，能够实现4k的双向传输。</p>
+<p>权限：<br>需要 root + Xposed&#x2F;LSPosed 框架，属于「深度越狱」方案。具体依赖：<br>Android 设备已解锁 Bootloader<br>安装了 Magisk（root）<br>安装了 LSPosed 模块框架（基于 Zygisk）</p>
+<p>不支持推流；系统相机大量使用 Native 层，也会失败；只是一个toy，对于真实的apk会遇到一些问题：native (C++) → 直接访问 camera，比如说webrtc，直接走native层</p>
+<p>模块本身是通用的</p>
+<p>防御方法：<br>1、检测xposed模块</p>
+<h2 id="3、sandyz987-XVirtualCamera"><a href="#3、sandyz987-XVirtualCamera" class="headerlink" title="3、sandyz987&#x2F;XVirtualCamera"></a>3、sandyz987&#x2F;XVirtualCamera</h2><p><a target="_blank" rel="noopener" href="https://github.com/sandyz987/XVirtualCamera">https://github.com/sandyz987/XVirtualCamera</a></p>
+<p>本质上还是一个xposed模块。XVirtualCamera 是一个 Xposed 框架插件，其核心思想是：不替换真实摄像头驱动，而是在应用层的 Java API 调用链上做 方法 Hook（钩子），拦截目标 App 与摄像头之间的所有交互，将真实帧数据替换为解码后的视频帧。</p>
+<p>只对白名单 App 生效，Android 9.0+，稳定优先。不支持拍照，因为没有适配，作者只关注视频流。</p>
+<p>主要依赖了ijkplayer (FFmpeg)（HTTP&#x2F;RTSP&#x2F;RTMP&#x2F;RTP&#x2F;mp4）</p>
+<p>共同点：</p>
+<p>都用 ijkplayer 播放 RTMP&#x2F;本地视频。<br>都通过 Xposed 在目标 App 进程里 Hook。<br>配置方式相同（stream.txt 或 virtual.mp4）。</p>
+<p>不同点本质：</p>
+<p>老 App（B站早期、快手、拼多多等）大量使用旧 Camera + onPreviewFrame 回调，需要“喂” YUV 数据。<br>新 App（抖音、WhatsApp、小米相机等）使用 Camera2 + Surface 管道，需要“偷梁换柱”把 Surface 替换&#x2F;重定向。</p>
+<p>路径 A（Surface 路径，给 Camera2 和不用 PreviewCallback 的 App）：<br>ijkplayer → 直接渲染 → previewSurface → App GL 消费<br>路径 B（PreviewCallback 路径，给用 Camera1 回调的 App）：<br>ijkplayer → SurfaceTexture → GL读像素 → Bitmap(ARGB)<br>→ Java传入JNI → encoder.cpp ARGB转NV21<br>→ 填入被Hook的onPreviewFrame byte[]回调 → App拿到假帧</p>
+<p>优点在于：替换更加简单，在 createCaptureSession 里直接替换 outputSurface 列表，ijkplayer 渲染到原始 Surface，利用了ijkplayer，能够支持推流等所有的流媒体协议，把帧直接渲染到 Surface。</p>
+<p>具体实现：</p>
+<p>android_virtual_cam 的策略是”多点散布式拦截”。它同时 Hook 了十几个方法：Camera.setPreviewTexture、Camera.setPreviewDisplay、Camera.startPreview、Camera.setPreviewCallbackWithBuffer、Camera.addCallbackBuffer、Camera.takePicture、CameraManager.openCamera（两个签名）、CaptureRequest.Builder.addTarget、CaptureRequest.Builder.removeTarget、CaptureRequest.Builder.build，以及所有六种 createCaptureSession 变体。这种方式覆盖面广，但逻辑散乱。</p>
+<p>XVirtualCamera 的策略是”纵向链式拦截”。它主要抓住两个关键节点：openCamera 和 CaptureRequest.Builder.build。在 openCamera 时替换整个 StateCallback，再在 onOpened 回调中 Hook CameraDevice 实例的 createCaptureSession，最后在 session 回调的 onConfigured 里启动 ijkplayer 渲染。在 createCaptureSession 时，直接把 outputSurface 列表替换掉，让相机 session 直接建立到 ijkplayer 解码输出的 Surface 上。App 拿到的 Surface 本身就是视频输出的 Surface，不需要两套渲染管线并行。这少了一个中间层，减少了帧同步问题。</p>
+<p>android_virtual_cam 在 Camera2 路径下使用了自研的 VideoToFrames 类（基于 MediaCodec 硬解），将每一帧解码为 NV21 或 JPEG 格式，再通过 ImageWriter 写入 ImageReader 的 Surface。这对于拍照场景（需要 YUV 原始帧）是必要的，但对于流媒体协议完全无能为力，只能播放本地 mp4。<br>XVirtualCamera 引入了 bilibili&#x2F;ijkplayer，这一步是质的升级。ijkplayer 基于 FFmpeg，天然支持 HTTP、RTSP、RTMP、RTP 等几乎所有流媒体协议，可以直接拉取 OBS 推出的 RTMP 流，延迟约 2~3 秒。但代价是放弃了逐帧的 YUV 控制权——ijkplayer 把帧直接渲染到 Surface，无法像 VideoToFrames 那样拦截每一帧做格式转换或注入 ImageReader，所以拍照功能的替换相对弱。</p>
+<p>对这些软件有特别的优化：<br>1、拼多多、抖音、微信视频号、快手</p>
+<p>优化：<br>app&#x2F;src&#x2F;main&#x2F;jni&#x2F; 目录下 encoder.cpp、utils.c、utils.h 这些文件的作用，他们做了颜色空间转换（ARGB → YUV420SP）<br> ijkplayer 的解码输出是 Surface，把这个 ARGB byte[] 传给 JNI 的 encoder.cpp 做颜色空间转换，需要转成 NV21（即 YUV420SP），填进 Hook 住的 onPreviewFrame 回调的 data 参数里</p>
+<p>我的评价：</p>
+<p>他只是将surface直接交给ijkplayer 渲染，而不是以帧级别进行hook，所以说完全由ijkplayer来控制，分辨率什么的都是依赖于ijkplayer。Surface 级别的替换本质上是把”水管接口”换了，管道里流什么完全交给 ijkplayer 决定，插件自己对帧内容毫无控制权，分辨率、格式、帧率全是 ijkplayer 的输出结果。</p>
+<p>ijkplayer 是 bilibili（哔哩哔哩）开源 的一个跨平台视频播放器框架（Android + iOS），底层完全基于 FFmpeg（业界最强大的音视频处理库），支持很多协议，并且支持 MediaCodec（Android 硬件解码），性能极高。这里面真正的解码、协议解析、帧生成全部跑在 native 层（编译成 .so 动态库）。</p>
+<p>这个项目我曾经也花了大量的时间去尝试，想要采用rtmp的方法，做了很多的尝试，包括但不限于尝试轻量级的rtmp服务器，使用简单的参数传递帧，并且也用过这个ijkplayer，但是发现还是有0.5s以上的延迟，这个主要开销难以解决，主要也是想提供一个全新的黑灰产手段。基本上开销都是花在这个视频的编码和解码上。</p>
+<h2 id="4、sudami-com-wangyiheng-vcamsx"><a href="#4、sudami-com-wangyiheng-vcamsx" class="headerlink" title="4、sudami&#x2F;com.wangyiheng.vcamsx"></a>4、sudami&#x2F;com.wangyiheng.vcamsx</h2><p><a target="_blank" rel="noopener" href="https://github.com/sudami/com.wangyiheng.vcamsx">https://github.com/sudami/com.wangyiheng.vcamsx</a></p>
+</div>
+          <nav class="post-nav">
+    
+    <a class="post-nav-item post-nav-next" href="/2026/03/27/face-flashing/">
+      <div class="nav-arrow">&lt;&nbsp;OLDER</div>
+      <span class="post-title">反光活体</span>
+    </a>
+    
+    
+    <a class="post-nav-item post-nav-prev" href="/2026/03/31/hello-world/">
+      <div class="nav-arrow">NEWER&nbsp;&gt;</div>
+      <span class="post-title">Hello World</span>
+    </a>
+    
+</nav>
+
+   </main>
+</div>
+
+  <footer class="footer">
+    <small class="footer_copyright">
+      <div id="bottom-inner">
+        © 2021 Site by Bojack Ma using
+        <a target="_blank" rel="noopener" href="http://hexo.io">hexo blog framework</a>.
+        <br>
+        <p> Theme is <a target="_blank" rel="noopener" href="https://github.com/dewjohn/hexo-theme-klise">Klise</a></p>
+      </div>
+    </small>
+  </footer>
+  
+  
+
+    
+      <script src="/js/main.js"></script>
+    
+  
+  <script>
+    window.FPConfig = {
+      delay: 0,
+      ignoreKeywords: [],
+      maxRPS: 3,
+      hoverDelay: 50,
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/gh/gijo-varghese/flying-pages@2.1.2/flying-pages.min.js"></script>
+</body>
+</html>
