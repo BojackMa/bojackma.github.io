@@ -258,7 +258,7 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
       <header class="header">
         
           <div class="tags">
-            <a href="/tags/tencent/" class="tag"># tencent</a>
+            <a href="/tags/%E4%BA%BA%E8%84%B8/" class="tag"># 人脸</a><a href="/tags/tencent/" class="tag"># tencent</a>
           </div>
         
         <h1 class="header-title" itemprop="headline">腾讯人脸</h1>
@@ -270,7 +270,423 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
           </div>
         </header>
 
-          <div class="page-content"><p>下面将会给你我曾经的主要工作，我主要是做腾讯人脸支付的攻防安全项目，现在我想要总结过去的工作，包装一下，想要在面试中使用，展现一下我的能力。请你先帮我复述和回忆一下，并且帮我想一想如何包装。</p>
+          <div class="page-content"><p>微信支付人脸认证黑产攻击与系统防护研究</p>
+<p><img src="/image-4.png" alt="alt text"></p>
+<p>整体的思路应该是：<br>第一点，我们先去静态分析微信apk，结合打调用栈等方式，我们发现整个人脸检测流程底层是一个有限状态机（FSM），由腾讯优图 SDK 实现。通过 hook FSM 初始化函数拿到了完整的状态列表，一共 7 个状态，按顺序流转。<br>状态机的流程是这样的：<br>第一个状态 NetFetchState，负责联网向服务端请求本次检测的配置，包括屏幕要闪什么颜色序列（color_data）、要做什么动作（action_data）等。<br>第二个状态 SilentLivenessState，做人脸预检，持续判断脸是否在框内、姿态是否端正、有没有遮挡，同时挑选质量最好的帧存下来，稳定通过之后才进入下一步。<br>第三个状态 ActionLivenessState，引导用户按指示做动作，比如眨眼、张嘴、点头，采集动作视频。<br>第四个状态 ReflectLivenessState，屏幕按服务端下发的颜色序列快速闪烁，摄像头同步采集人脸反光，用于判断面前是真人还是照片或视频。<br>第五个状态 NetLivenessReqResultState，把前面几个阶段采集的所有数据收集起来，调用 onActReflectRequest() 打包，其中会调用 native 层的 ChecksumPose() 计算视频和人脸数据的联合校验值，再通过 makeActionReflectLiveReq() 序列化成 JSON，准备上传。<br>另外还有 IdleState（正常结束）和 TimeoutState（任何阶段超时的兜底状态）。</p>
+<p>数据打包完成后，SDK 本身不直接发网络请求，而是通过回调把数据交给微信侧的 s0 类（FaceFlashActionReflectManager），由它的 onNetworkRequestEvent 函数来处理。这个函数在整个流程里会被调用两次：第一次是拉取配置，第二次是上传人脸检测数据。上传时，s0 会对数据做 SM2 国密加密（代码里可以看到 WxSmCryptoUtil.sm2Encrypt），然后发给腾讯服务器。<br>最后，服务器验证通过后返回一个 token，经过 handleResponseEvent 解析，最终通过 FSM 事件链传回上层业务，完成整个认证流程。</p>
+<p>通过这个我们了解了整个的人脸认证流程有哪些环节，每个环节大致都在做什么。</p>
+<p><img src="/image-6.png" alt="alt text"></p>
+<p>第二步，我们从日志入手。<br>微信这种量级的项目，代码里一定有大量日志。虽然所有类名和方法名都被混淆了，不好直接找，但日志函数有一个特点——它的调用模式很固定，类似 log.i、log.e、log.d 这种，参数里通常带有明文的 TAG 字符串和描述信息。我们通过这个特征，结合字符串搜索，定位到了日志相关的工具类。<br>在人脸认证最后上传数据的环节，onNetworkRequestEvent 里也有对应的日志调用，会把发送的 URL 和完整的请求内容都打印出来。我们 hook 这条日志，拿到了实际发送的数据，是一个很大的 JSON。<br>里面比较关键的字段包括：<br>设备指纹信息、摄像头风险配置、眼部照片、嘴部照片、最佳人脸帧、动作视频、数十张反光活体图片帧序列、各个关键时间戳，以及两个 checksum 值。<br>关于这两个 checksum：<br>一个是 Checksum，对单张图片的 base64 字符串计算校验和，主要用于验证图片数据的完整性；另一个是 ChecksumPose，是三元联合校验，把动作视频、最佳人脸图、动作序列字符串三者绑在一起算一个校验值，防止这三份数据被分别篡改后重新组合。<br>这两个函数在 Java 层都是 native 方法，实现在 .so 里。我们后续对 native 层做了逆向，发现两者底层用的是同一套算法实现，只是入参数量不同，这也印证了大厂内部通常会有一套统一的校验算法库复用在各个场景里。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">NetFetchState / NetLivenessReqResultState</span><br><span class="line">    ↓  YtFSM.sendNetworkRequest(url, jsonBody, callback)</span><br><span class="line">    ↓</span><br><span class="line">YtFSM.eventListener.onNetworkRequestEvent(type, jsonBody, ...)</span><br><span class="line">    ↓  【跨越SDK边界，进入微信层】</span><br><span class="line">C41916s0.onNetworkRequestEvent()</span><br><span class="line">    ├── url含&quot;wechat_face_config&quot;</span><br><span class="line">    │     └── 提取select_data → 微信CGI C105363a → 腾讯服务器</span><br><span class="line">    │           ↓  onSceneEnd → m37712p()</span><br><span class="line">    │           └── 构造配置响应JSON → onNetworkResponseEvent回调给SDK</span><br><span class="line">    │</span><br><span class="line">    └── url含&quot;wechat_face_verify&quot;</span><br><span class="line">          └── SM2加密请求体 → 微信CGI C105365c / HTTP → 腾讯服务器</span><br><span class="line">                ↓  onSceneEnd → m37713q()</span><br><span class="line">                └── 构造验证结果JSON（含token）→ onNetworkResponseEvent回调给SDK</span><br><span class="line">                      ↓</span><br><span class="line">                    handleResponseEvent()</span><br><span class="line">                      ├── err_msg==&quot;ok&quot; → sendFSMEvent(SUCCESS, token)</span><br><span class="line">                      └── err_msg==&quot;fail&quot; → sendFSMEvent(FAILED, err_code)</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h3 id="方案一：视频注入攻击："><a href="#方案一：视频注入攻击：" class="headerlink" title="方案一：视频注入攻击："></a>方案一：视频注入攻击：</h3><p>第一步是搞清楚微信人脸认证用的是哪套摄像头API。Android有三代摄像头框架：老的Camera1、新的Camera2，以及Google封装的CameraX。<br>人脸认证模块的实际调用链，最终确认它走的是最早的Camera1的 Camera.PreviewCallback 接口。我判断这是历史遗留原因——人脸认证功能上线较早，一直沿用了Camera1，没有做迁移。<br>另外值得一提的是，微信没有上强脱壳和反调试保护。我的判断是：微信这样的亿级用户产品需要极致的性能和用户体验，不能像专门的金融安全软件那样加很重的壳——那会带来明显的启动耗时和运行开销。这个权衡客观上给了我们逆向的空间。</p>
+<p>拿到摄像头入口之后，更关键的是搞懂活体检测的颜色变化是怎么实现的。我通过Jadx追踪调用链，发现整个流程是这样的：活体检测的变色其实不是改屏幕背光，而是SDK在预览画面上叠了一层遮罩。服务端下发颜色后，程序会动态渲染这个遮罩，并在人脸位置挖洞，让不同颜色的光打到脸上做反光检测。</p>
+<p>理解了架构之后，我设计了一个动态响应式视频注入攻击，核心有两个Hook点：</p>
+<p>方案的核心是同时Hook两个位置：<br>Hook点1 — 摄像头原始帧劫持： Hook Camera.PreviewCallback.onPreviewFrame。这是Android Camera1 API的帧回调接口，每帧图像会以NV21格式（640×480分辨率，460800字节）回调到这里。我在这里将真实摄像头数据替换成受害者人脸的伪造帧。<br>Hook点2 — 颜色信号监听（最关键）： 同时Hook YTAGReflectLiveCheckInterface.onScreenChanged，实时拦截服务端下发的颜色值。我通过逆向提取出了三种颜色对应的ARGB特征值——绿色 0x1fbf46f2、蓝色 0x371ec8f2、红色 0xe63587f2。每当颜色切换，脚本立即切换对应颜色打光版本的伪造帧序列循环播放（如红光帧1 → 红光帧2 → 红光帧1…），模拟真实的光照反射效果。<br>这样伪造帧不是静态的，而是能实时响应颜色挑战的，从根本上绕过了色彩反光活体检测</p>
+<p>同时hook log函数，检测一下结果。</p>
+<p>为防止系统对帧数据进行静态校验，攻击代码在每次加载 .bin 文件时，会随机反转数据中的 1 个 bit 位，在不影响图像解码效果的前提下规避可能存在的哈希或签名比对。</p>
+<p>伪造图片来源后来升级为用 Gemini 2.5 Flash 多模态大模型生成眨眼&#x2F;张嘴变体，之前采用的是 facefusion + inswapper模型 换脸为受害者人脸</p>
+<p>摄像头 onPreviewFrame 的回调频率是每秒约30帧，我必须在极短时间内完成伪造帧的替换。如果在回调里实时做 JPEG → RGB → NV21 的格式转换，在ARM处理器上这个链路的计算开销是不可忽视的，会导致帧替换出现延迟和卡顿，反而暴露攻击特征。<br>解决方案是提前预计算：把所有伪造帧（红&#x2F;绿&#x2F;蓝三套打光版本，每版多帧）事先离线转换为NV21格式的原始字节流，存成 .bin 文件，每个文件恰好460800字节。脚本启动时一次性把所有bin文件预加载进内存缓存，运行时直接 Arrays.copyOf 内存复制完成替换，做到零解码开销，保证帧替换的实时性。<br>另外还有一个小细节：为了防范服务端可能存在的帧数据哈希校验，每次替换时会随机反转数据中的1个bit，在不影响图像视觉效果的前提下规避静态指纹比对。”</p>
+<h3 id="方案二：协议破解攻击"><a href="#方案二：协议破解攻击" class="headerlink" title="方案二：协议破解攻击"></a>方案二：协议破解攻击</h3><p>方案二的攻击面完全不同于方案一。它不碰摄像头，而是在数据即将打包发往服务端的最后一刻，在Java层和Native层双重拦截，把所有人脸图像和对应的完整性校验值全部换成受害者的伪造数据。<br>方案二需要用户自己真实完成扫脸交互，更稳定，不干扰客户端体验，不卡顿。</p>
+<p>首先我用 dump_network.js 抓取完整的上行网络包，分析出 wechat_face_verify 接口的完整数据结构。这个包里有六类需要替换的关键字段：</p>
+<p>live_image：640×480的正脸JPEG，base64编码<br>eye_image &#x2F; mouth_image：320×240的动作照片<br>action_video：640×448×15帧的MP4视频，记录整个动作过程<br>reflect_data：九张色彩反光照片序列<br>每个图像字段都对应一个checksum和一组five_points（人脸五点坐标）</p>
+<p>其中checksum是服务端用来验证图像完整性的关键字段，格式形如 00061.0.8.111.1 + 时间戳 + 72位小写字母数字混合串，是由native层so库对图像内容计算出来的，不能伪造，只能Hook</p>
+<p>图像替换的切入点是 YtLivenessNetProtoHelper.makeActionReflectLiveReq 这个方法。通过阅读它的源码，我发现它是整个认证请求包的组装工厂——它把 liveImage、eyeImage、mouthImage、reflectData 等所有字段汇聚成最终的JSON请求体。我在这里Hook，在序列化之前把所有 ImageInfo 对象里的 image 字段替换成受害者照片的base64内容。</p>
+<p>调用 libc.so 的 malloc 在native堆上分配内存（len + 24 字节）<br>在内存头部写入数据长度（Memory.writeU64），再逐字节写入图片数据<br>返回 nativeBuf.add(24) — 即跳过头部24字节的元信息，指向图片数据本体</p>
+<p>另外 action_video 的替换切入点是 YtVideoEncoderHelper.getVideData——YtVideoEncoderHelper 这个类是干什么的？是微信人脸认证里专门负责录制和编码动作视频的工具类。这个方法是读取编码完成的MP4文件内容的，我在这里返回预先准备好的伪造视频，替换位置恰好在checksum计算之前，这是其中的一个好处。</p>
+<p>这是方案二最有技术难度的部分。图像替换之后，checksum必须同步更新，否则服务端校验会失败。但checksum的计算在native层的 libYTAGReflectLiveCheck.so 里，我需要用IDA逆向so文件找到对应函数。<br>通过 get_artmethod.js 这个辅助脚本，我从Java层的ArtMethod结构体读取了JNI函数对应的native指针，定位到两个关键函数：</p>
+<p>sub_621a44：负责计算 live_image、eye_image、mouth_image 的checksum，按顺序依次处理这三张图<br>sub_6581c：负责计算九张色彩反光图（reflect_data）的checksum</p>
+<p>我的策略是在这两个函数的入口处，通过Frida的 Interceptor.attach 拦截 onEnter，在checksum计算发生之前，把参数里指向原始图像数据的指针改写为指向我预先在native内存里准备好的伪造图像数据的指针——这样native层算出来的就是伪造图像的合法checksum。</p>
+<p>five_points 是每张图像对应的人脸五点坐标（左右眼、鼻尖、左右嘴角，共10个浮点值），服务端会用它做人脸对齐校验。我用 refine_landmarks_five_points.py 配合 dlib 的68点面部特征检测模型，对受害者照片重新计算这五个关键点坐标，再填入替换脚本。</p>
+<p>在测试过程中我还发现了一个服务端的逻辑漏洞：eye_image 和 mouth_image 服务端并不严格校验图像内容是否对应眨眼或张嘴动作——用同一张普通正脸照片可以同时充当这两个字段，不管客户端要求的动作是什么，都能通过验证。这说明服务端对动作图像的内容校验存在缺失。</p>
+<p>整套方案执行下来，攻击者只需要受害者一张正脸照片。难点主要有三个：第一，逆向native层so文件找到正确的checksum计算函数并在正确时机拦截；第二，处理好Hook的时序——脚本必须在用户触达扫脸界面之后、数据上传之前挂上；第三，六类数据字段（图像、checksum、five_points、视频）的替换必须全部协调一致，任何一个遗漏都会导致验证失败。</p>
+<p>最值得重点讲的3个亮点<br>① 逆向出了Native层Checksum算法 — 这个技术难度最高，面试官最感兴趣。你用 get_artmethod.js 从Java层Art方法结构体中读取native指针，定位到so库偏移，再用IDA分析算法逻辑，最终在Frida中实现内存级别的替换，绕过了服务端的完整性校验。</p>
+<blockquote>
+<p>get_artmethod.js 是干什么的<br>一句话：这是一个逆向辅助工具脚本，用来找出Java层JNI方法在native层对应的so库名称和函数偏移地址，方便后续用IDA分析或Frida Hook。<br>它解决的是一个具体问题：你在Jadx里看到 YTPoseDetectJNIInterface 这个类，里面一堆 native 方法，比如 Checksum、poseDetect、FRInit 等等。但这些方法的具体实现在某个 .so 文件里，你不知道是哪个so，也不知道函数在so里的偏移是多少。get_artmethod.js 就是专门来回答这个问题的。</p>
+</blockquote>
+<p>在ART里，每一个Java方法都在内存里对应一个 ArtMethod 结构体。对于 native 方法，这个结构体里有一个关键字段——在偏移 +16 处存着一个指针，指向该方法实际的native函数地址。<br>Java方法对象<br>    → getHandle() 拿到 ArtMethod 结构体的内存地址<br>    → .add(16)    跳到偏移+16处<br>    → .readPointer()  读出native函数指针<br>    → DebugSymbol.fromAddress()  把地址解析成”so库名 + 偏移量”</p>
+<p>就是下面这一句<br>DebugSymbol.fromAddress(ptr(ptr(getHandle(ReadableNativeMap[“FRInit”]).add(16).readPointer())))</p>
+<p>脚本里查询了两个JNI接口类的方法（注释里能看到两个列表）：<br>YTPoseDetectJNIInterface（动作姿态检测）：<br>FRInit、FRPushYuv、poseDetect、Checksum 等——这是负责动作活体检测和checksum计算的so接口。<br>YTAGReflectLiveCheckJNIInterface（色彩反光活体检测）：<br>Checksum、canReflect、getActionReflectData、getBestImage 等——这是负责九色反光检测的so接口。</p>
+<p>它是方案二整个native层攻击的前置侦察步骤。 如果没有它，你不知道 sub_621a44 和 sub_6581c 对应的是哪个Java层方法，也就无从判断在哪里插入Hook才能精准拦截checksum的计算。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">├─ Java.perform（主线程）</span><br><span class="line">│       ├─ [1] Hook onScreenChanged → 建立colorlist颜色序列 + 动态threshold</span><br><span class="line">│       ├─ [2] Hook makeActionReflectLiveReq → 替换live/eye/mouth/reflect图片和five_points</span><br><span class="line">│       ├─ [3] Hook getVideData → 覆写action_video文件</span><br><span class="line">│       └─ [4] Hook onNetworkRequestEvent → 保存最终网络包（调试用）</span><br><span class="line">│</span><br><span class="line">└─ setImmediate（native层，立即执行）</span><br><span class="line">        ├─ [5] Hook sub_6581c @ libYTAGReflectLiveCheck.so+0x6581c</span><br><span class="line">        │       → 替换九色reflect checksum（LR=0x67cc4）</span><br><span class="line">        └─ [6] Hook sub_621a44 @ libYTAGReflectLiveCheck.so+0x621a44</span><br><span class="line">                → 替换live/eye/mouth checksum（LR=0x63ddf0）</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+<p>关键那点：checksum的替换</p>
+<p>Java层只负责把JSON里的图片换掉，但checksum是native层算出来的，Java层根本没有能力去伪造它——因为你不知道算法。所以必须下沉到native层，在算法执行之前把输入偷偷换掉，让算法对伪造图片重新算一遍，得到伪造图片的合法checksum。</p>
+<p>问题二：Memory.writePointer 的作用是替换native函数的参数吗？是的，就是替换参数。 但要理解为什么这么做，需要先理解 args[1] 到底是什么。在ARM架构里，函数调用的参数通过寄存器传递。args[0] 对应 r0 寄存器，args[1] 对应 r1 寄存器，以此类推。但Frida的 args[1] 不是寄存器里的值本身，而是那个寄存器的内存地址。<br>Memory.writePointer(args[1], get_img_for_reflect(…)) 做的就是：把r1寄存器里存的指针值，从指向真实图片改成指向伪造图片。函数体继续往下执行时，它读到的就是伪造图片的数据，算出来的自然是伪造图片的checksum。</p>
+<p>问题三：为什么+24？是因为参数是字符串结构体吗？完全正确。 这个参数不是普通C字符串，而是C++的 std::string 对象，它在内存里有固定的头部结构。在ARM 32位下，std::string 的内存布局是这样的：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">磁盘文件 reflect_red_0.txt</span><br><span class="line">    │  (base64文本)</span><br><span class="line">    ▼</span><br><span class="line">base64ToBytes()  →  JS Uint8Array</span><br><span class="line">    │</span><br><span class="line">    ▼</span><br><span class="line">malloc(len + 24) 在native堆分配内存</span><br><span class="line">    │</span><br><span class="line">    ├─ [0~7]    写入 len（数据长度）</span><br><span class="line">    ├─ [8~23]   头部填0（对齐字段）</span><br><span class="line">    └─ [24~]    逐字节写入图片数据</span><br><span class="line">    │</span><br><span class="line">    ▼</span><br><span class="line">返回 ptr.add(24)  ← 指向图片数据本体的native指针</span><br><span class="line">    │</span><br><span class="line">    ▼</span><br><span class="line">Memory.writePointer(args[1], 上面的指针)</span><br><span class="line">    │    ← 把native函数的入参指针改写</span><br><span class="line">    ▼</span><br><span class="line">sub_6581c / sub_621a44 继续执行</span><br><span class="line">    │    ← 顺着被改写的指针读到伪造图片数据</span><br><span class="line">    ▼</span><br><span class="line">计算并返回伪造图片的合法 checksum</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><img src="/image-9.png" alt="alt text"></p>
+<p>关键难点：<br><img src="/image-8.png" alt="alt text"></p>
+<p>关于怼屏：<br>有过一定的了解，不具有通用性，可以通过修改摄像头，利用后摄采集屏幕上的照片，建议在亮度较暗的环境下。</p>
+<h4 id="方案三："><a href="#方案三：" class="headerlink" title="方案三："></a>方案三：</h4><p>场景一：面试官问”讲讲你做的项目”<br>不要上来就说 OBS 插件、NV21、BT.601。先说你在解决什么问题：</p>
+<p>“我需要把电脑上处理好的视频帧，实时传到手机上，替换掉手机摄像头的输入。最开始想用 RTMP 推流，但延迟有一两秒，而且校园网根本跑不通。后来发现可以通过 USB 的 adb 通道直接传原始数据，这样延迟能压到两帧以内，大概 66 毫秒。”</p>
+<p>这一段说完，面试官已经知道你在做什么了，也知道你有过方案对比，而不是随便选了一个方案。</p>
+<p>场景二：面试官说”那 OBS 插件这块，你讲讲”<br>这时候用一个类比：</p>
+<p>“OBS 渲染视频的时候，帧数据是在 GPU 里的，CPU 直接读不到。我需要把它搬到 CPU 内存里，才能通过 TCP 发出去。这个过程有点像——你不能直接从打印机的内存里拿文件，你得先让打印机把文件输出到一个共享盘，你再从共享盘拷走。OBS 里这个’共享盘’叫 staging surface，GPU 把帧复制进去，CPU 再从里面读。”</p>
+<p>然后如果对方继续追：</p>
+<p>“这个操作有个坑——GPU 复制数据是异步的，你让它复制，它不一定马上好。等你去读的时候，系统会隐式地等它完成，这个等待可能会卡住 OBS 的渲染线程。渲染线程一卡，整个预览就掉帧。所以我把读出来之后的所有工作——格式转换、网络发送——都扔到后台线程去做，渲染线程只做最快的那一步。”</p>
+<p>场景三：面试官问”你遇到什么印象深刻的 bug？”<br>这是送分题，讲 SIGPIPE：</p>
+<p>“有一次手机断开连接之后，OBS 直接崩了，完全没有报错信息，就是进程消失了。查了挺久才发现，在 macOS 上，如果你往一个已经断掉的 TCP 连接发数据，系统会发一个叫 SIGPIPE 的信号，进程对这个信号的默认处理就是直接退出。加一行 signal(SIGPIPE, SIG_IGN) 把它忽略掉，之后断线就只是 send 返回一个错误，程序可以正常处理重连，不会崩了。”</p>
+<p>这个故事好讲，因为它有现象、有排查、有结论，不需要对方懂 OBS。</p>
+<p>场景四：面试官问”你这个延迟是怎么测出来的？”</p>
+<p>“我在发送端和接收端同时打了时间戳，然后让画面里出现一个变化——比如颜色切换——通过比对两端记录的时间戳来算延迟。最后测出来是两帧，33fps 下大概 66 毫秒。这个延迟叠加上微信本身识别的延迟，总共是五帧，还在系统的容忍范围内。</p>
+<p>故事背景：为什么不用 RTMP？<br>方案三的诞生，源于一段痛苦的折腾经历。<br>最初的思路很直接：把换脸后的视频推到一台 RTMP 服务器，手机再从服务器拉流。这条路听起来合理，走起来却处处碰壁。<br>第一个拦路虎是延迟。RTMP 协议天生为直播而设计，流经服务器时要编码、再解码，手机端还要做一次解码。这一套下来，稳定延迟在 1-2 秒，即使跑了很多开源项目、调了各种参数，始终压不下去。对带货直播而言，2 秒延迟完全可以接受；但对于人脸核身这种需要实时响应的场景，它是致命的——活体检测的反光颜色变化有精确时间戳，延迟过长会露馅。<br>第二个问题更魔幻：在校园网或公司内网下，RTMP 流根本跑不通。能 ping 通服务器，但视频就是传不过去。是路由器过滤了流量？是 Windows 的安全策略？翻遍了各种设置，查了很久，没有确定答案。每次实验只能切到手机热点，速度慢、不稳定，工程体验极差。</p>
+<p>放弃 RTMP 后，转向问题的本质：微信的摄像头回调是怎么工作的？<br>微信调用的是 Android 原生 Camera API，核心回调是 Camera.setPreviewCallbackWithBuffer。每当摄像头捕获一帧，系统会触发 onPreviewFrame(byte[] data, Camera camera)，把原始 NV21 格式的帧数据塞进 data 这个字节数组。<br>关键发现是：这个 data 是可以在回调触发前被替换的。用 Xposed 框架 hook 这个方法，在 beforeHookedMethod 里把 data 的内容整体覆盖，微信的人脸识别 SDK 读到的就不再是真实摄像头的内容，而是我们注入的数据。<br>整条攻击链由此清晰：<br>电脑端处理视频，手机端只负责”消费”帧。</p>
+<p>系统架构：四个组件，一条数据管道<br>组件一：换脸工具（可插拔）<br>外接摄像头以 30fps 输出视频流，换脸工具捕获每一帧，将攻击者的人脸替换为受害者，输出处理后的帧到 OBS。<br>这里做了一个重要的工程设计决策——换脸工具不直接输出帧，而是通过 OBS 中转。原因是：目前还没有确定最终使用哪个开源换脸项目，不同项目的输出接口各不相同。让 OBS 作为统一的”接收层”，后续切换换脸工具时只需要调整换脸软件本身，不需要动下游任何逻辑。<br>组件二：OBS 插件（plugin-main.c）<br>这是整个方案中技术难度最高的部分，用 C 语言实现。<br>插件以 OBS 滤镜的形式挂载在预览源上。每次 OBS 渲染帧时，通过 gs_texrender 和 gs_stagesurface 把 GPU 纹理同步拷贝到 CPU 内存，拿到 RGBA 原始数据后，用 BT.601 系数逐像素转换为 NV21 格式。<br>为了不阻塞 OBS 渲染主线程，插件采用了双线程设计：渲染线程只负责把帧入队，后台 worker 线程负责格式转换和网络发送。队列用 mutex + dispatch semaphore 保护，TCP 连接支持自动重连、TCP_NODELAY 关闭 Nagle 算法、4MB 发送缓冲，最大程度压低传输延迟。<br>每帧数据以 4字节小端长度头 + NV21 帧体 的极简协议发出，目标地址是 127.0.0.1:27183。<br>组件三：nv21_recv5.c——手机端接收服务<br>这是一个运行在 Android 设备上（通过 adb shell 启动）的 C 程序，监听 127.0.0.1:27183。<br>通过 adb forward tcp:27183 tcp:27183，手机的 27183 端口被映射到电脑的 27183 端口，形成 USB 通道上的 TCP 隧道——完全绕开了网络防火墙的问题，也比 WiFi 传输更稳定。<br>程序接收每一帧后，先写到 &#x2F;sdcard&#x2F;…&#x2F;frames&#x2F;latest.new 临时文件，收完后原子性地 rename 成 latest.bin。这个原子替换确保 Xposed 模块读到的永远是一个完整的帧，不会读到半截数据。同时维护最近 30 帧的历史，方便调试对比。<br>组件四：Xposed 模块（MainHook.kt）<br>Kotlin 编写的 Xposed 模块，在微信启动时注入。<br>核心 hook 点是 android.hardware.Camera.setPreviewCallbackWithBuffer——当微信注册它的预览回调时，模块拦截并找到回调类，再 hook 该类的 onPreviewFrame 方法。每次微信摄像头触发回调时，模块从 latest.bin 读取最新的 NV21 帧，用 System.arraycopy 整体覆写 data 字节数组。微信的人脸识别 SDK 毫不知情地拿到了换脸后的图像，当作真实摄像头数据上传服务器。</p>
+<p>延迟分析：为什么 5 帧延迟仍然能过检？<br>系统的总端到端延迟来自两部分：</p>
+<p>USB TCP 隧道传输：约 2 帧（66ms）<br>微信正常人脸识别的固有延迟：2-3 帧</p>
+<p>合计 4-5 帧，约 133-166ms。<br>通过抓包分析微信发给服务器的网络包，可以看到活体反光变色有两个时间戳记录颜色变化的时间点。正常用户操作会有 2-3 帧的”反应延迟”；方案三攻击下，这个延迟变成了 5 帧——刚好在微信服务器的容忍范围之内，能够通过核身验证。</p>
+<p>运行状态可在 &#x2F;sdcard&#x2F;Android&#x2F;data&#x2F;com.tencent.mm&#x2F;files&#x2F;frames&#x2F; 目录下查看实时帧文件，验证注入是否正常工作。</p>
+<p>方案三的核心优势<br>无编解码开销：数据从 OBS 出来是 NV21，到手机还是 NV21，微信读到的是 NV21。全程没有任何视频编解码，延迟极低，手机性能压力几乎为零。<br>网络环境无关：通过 USB adb forward 建立隧道，校园网、公司内网的防火墙完全失效，比任何基于 IP 的方案都更稳定可靠。<br>换脸工具解耦：OBS 作为统一的帧接收层，换脸项目可以随时替换，不影响下游任何组件。<br>实现极简：协议只有 4 字节头 + 裸帧，两端代码加起来不到 500 行 C，加上 Xposed 模块约 150 行 Kotlin，清晰、可调试、易维护。</p>
+<p>难点在于：OBS 插件开发本身就是一道门槛——文档稀少，主要靠读官方源码学。你选择的是<strong>滤镜（Filter）</strong>形式，这是最正确的挂载方式，但也是最需要理解渲染管线的。</p>
+<h3 id="防御方案"><a href="#防御方案" class="headerlink" title="防御方案"></a>防御方案</h3><p>面向 Android 应用的运行时环境安全检测 SDK，可嵌入任意 App 实现风险环境识别</p>
+<p>不过先说一句：如果面试官追问技术细节，你需要能接得住，否则反而减分。所以建议你把我们之前聊的内容认真理解一遍，至少能说清楚每个检测项的原理。</p>
+<hr>
+<h2 id="面试故事（可直接背诵）"><a href="#面试故事（可直接背诵）" class="headerlink" title="面试故事（可直接背诵）"></a>面试故事（可直接背诵）</h2><hr>
+<p><strong>开场（30秒，抓住注意力）</strong></p>
+<blockquote>
+<p>我做过一个课题，背景是研究微信支付这类人脸认证系统在客户端侧的安全问题。我们发现黑产攻击人脸识别的主要手段不是破解算法，而是在手机端直接篡改摄像头数据——比如用 Frida Hook 掉摄像头采集接口，把真实人脸替换成伪造视频，应用根本感知不到。所以我们课题组的任务是：在应用内部构建一套检测机制，在认证开始之前先判断当前运行环境是否可信。</p>
+</blockquote>
+<hr>
+<p><strong>方案设计（1分钟，体现系统思维）</strong></p>
+<blockquote>
+<p>我把整个检测体系分成三层。第一层是<strong>系统完整性</strong>，检测设备底层有没有被篡改——包括 Root、Magisk、APatch&#x2F;KernelSU、Bootloader 解锁、模拟器这几类。第二层是<strong>运行时安全</strong>，检测应用运行过程中有没有被动态注入——包括 Frida、Xposed&#x2F;LSPosed、调试器附加、可疑 SO 注入。第三层是<strong>代码完整性</strong>，防止攻击者把检测逻辑本身也 Hook 掉。最终所有检测结果汇入一个风控评分引擎，输出 0-100 的风险分和状态码，业务层根据状态码决定是放行还是拒绝。</p>
+</blockquote>
+<hr>
+<p><strong>技术亮点（1-2分钟，重点说 1-2 个，别全说）</strong></p>
+<blockquote>
+<p>里面有几个我觉得比较有意思的技术点。</p>
+<p>一个是 <strong>Magisk 检测的多路并行</strong>。光检查包名或文件是不够的，因为 Magisk 有隐藏模式可以绕过。所以我做了三路：系统属性里查 Magisk 特有字段、PackageManager 查包名、读 <code>/proc/self/mounts</code> 挂载记录查 overlayFS 痕迹。只要任意一路命中就报警，提高了覆盖率。</p>
+<p>另一个是<strong>代码完整性校验</strong>，这个我觉得是整个系统里最有意思的部分。思路是：攻击者用 Frida 做 inline hook 的时候，会修改内存里函数开头的几个字节，写入跳转指令，但磁盘上的 SO 文件是不变的。所以我在 Native 层做了一个对比——用 <code>dlsym</code> 找到函数在内存里的地址，同时把 APK 包里原始的 SO 文件解压出来，解析 ELF 符号表找到同一个函数在文件里的偏移，分别算 CRC32，两边一比，不一致就说明这个函数在内存里被篡改了。这个方案不依赖任何系统权限，在普通应用进程里就能跑。</p>
+</blockquote>
+<hr>
+<p><strong>结果（30秒）</strong></p>
+<blockquote>
+<p>我们在七种典型环境下做了验证：Apatch Root、Frida Hook + CRC 对抗、Magisk 环境、LSPosed 注入、AOSP 自定义 ROM、JEB&#x2F;IDA 调试器附加、夜神模拟器，全部能正确识别并输出对应的风险类型和等级。正常设备运行没有误报。</p>
+</blockquote>
+<hr>
+<h2 id="可能被追问的问题，提前准备"><a href="#可能被追问的问题，提前准备" class="headerlink" title="可能被追问的问题，提前准备"></a>可能被追问的问题，提前准备</h2><p><strong>Q：CRC 校验能不能被绕过？</strong></p>
+<blockquote>
+<p>能，如果攻击者同时 patch 掉校验函数本身就绕过了。所以这只是防御的一层，不是银弹。更完整的方案应该结合服务端校验和多点互校。</p>
+</blockquote>
+<p><img src="/image-10.png" alt="alt text"></p>
+<p><img src="/image-11.png" alt="alt text"></p>
+<p><img src="/image-12.png" alt="alt text"></p>
+<p><strong>Q：Frida 有没有办法绕过你的线程名检测？</strong></p>
+<blockquote>
+<p>有，Frida 支持自定义线程名，老版本才叫 gum-js-loop。所以检测 Frida 不能只靠线程名，我做了三路：线程名 + maps 内存映射 + fd 文件描述符，三路叠加降低被单点绕过的风险。</p>
+</blockquote>
+<p><strong>Q：这套东西和市面上的 SafetyNet &#x2F; Play Integrity 有什么区别？</strong></p>
+<blockquote>
+<p>SafetyNet 是 Google 服务端做校验，需要网络，而且在中国很多设备上不可用。我们这套是纯客户端本地检测，不依赖网络和 Google 服务，更适合国内场景，也可以嵌入任何 App。</p>
+</blockquote>
+<h2 id="整个流程的一句话总结"><a href="#整个流程的一句话总结" class="headerlink" title="整个流程的一句话总结"></a>整个流程的一句话总结</h2><blockquote>
+<p>用函数名查到它在内存里的地址，再从 APK 包里解压出未被篡改的原始 SO，解析 ELF 格式找到同一个函数在磁盘文件里的位置，对这两份字节各算一个 CRC32 指纹，指纹不同就说明内存里的函数被 Hook 改写过了。</p>
+</blockquote>
+<hr>
+<h2 id="面试时说这一块的话术"><a href="#面试时说这一块的话术" class="headerlink" title="面试时说这一块的话术"></a>面试时说这一块的话术</h2><blockquote>
+<p>“代码完整性这块的核心思路是：Hook 只改内存不改磁盘。所以我在 Native 层用 <code>dlsym</code> 拿到函数的内存地址，同时从 APK 包里解压出原始 SO 文件，解析 ELF 符号表定位到同一个函数的磁盘字节，两边各算一个 CRC32 做对比。如果 Frida 做了 inline hook，函数开头的跳转指令会让内存 CRC 和磁盘 CRC 对不上，这样就能检测到。”</p>
+</blockquote>
+<p>&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;</p>
+<p>好，我从零开始讲，把每个函数和步骤都解释清楚。</p>
+<hr>
+<h2 id="先理解问题本质"><a href="#先理解问题本质" class="headerlink" title="先理解问题本质"></a>先理解问题本质</h2><p>攻击者用 Frida 做 inline hook，原理是这样：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">正常情况下，函数在内存里长这样：</span><br><span class="line">[原始指令字节: A B C D E F G H ...]</span><br><span class="line"></span><br><span class="line">被 Frida Hook 后，函数开头被改写：</span><br><span class="line">[跳转指令字节: XX XX XX XX E F G H ...]</span><br><span class="line"> ↑ 这几个字节被替换成了跳转到 Frida handler 的指令</span><br></pre></td></tr></table></figure>
+
+<p>磁盘上的 SO 文件没有变，只有内存里的字节被改了。所以<strong>对比内存和磁盘的字节是否一致</strong>，就能检测到 Hook。</p>
+<hr>
+<h2 id="第一步：dlsym-——-找到函数在内存里的地址"><a href="#第一步：dlsym-——-找到函数在内存里的地址" class="headerlink" title="第一步：dlsym —— 找到函数在内存里的地址"></a>第一步：dlsym —— 找到函数在内存里的地址</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span>* sym_addr = <span class="built_in">dlsym</span>(RTLD_DEFAULT, <span class="string">&quot;Java_com_greatgu_..._detectAosp&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p><strong><code>dlsym</code> 是什么</strong>：dynamic link symbol，动态链接符号查找函数。</p>
+<p><strong>类比</strong>：你知道一个人的名字，想知道他住在哪个门牌号。<code>dlsym</code> 就是这个查询工具，给它一个函数名字符串，它返回这个函数在<strong>当前进程内存里</strong>的地址（指针）。</p>
+<p>**<code>RTLD_DEFAULT</code>**：表示在当前进程已加载的所有动态库里搜索，不限定在哪个库。</p>
+<p>执行完这一步，<code>sym_addr</code> 就是一个内存地址，比如 <code>0x7f3a2c0010</code>，指向那个函数的第一个字节。</p>
+<hr>
+<h2 id="第二步：dladdr-——-从地址反查-SO-文件路径"><a href="#第二步：dladdr-——-从地址反查-SO-文件路径" class="headerlink" title="第二步：dladdr —— 从地址反查 SO 文件路径"></a>第二步：dladdr —— 从地址反查 SO 文件路径</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Dl_info info;</span><br><span class="line"><span class="built_in">dladdr</span>(sym_addr, &amp;info);</span><br><span class="line"><span class="comment">// info.dli_fname = &quot;/data/app/com.xxx/lib/arm64/libriskcontrol.so&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p><strong><code>dladdr</code> 是什么</strong>：给它一个内存地址，它反向查询这个地址属于哪个动态库文件。</p>
+<p><strong>类比</strong>：你有一个门牌号，想知道它在哪条街。<code>dladdr</code> 就是这个反查工具。</p>
+<p><strong><code>Dl_info</code> 结构体</strong>：里面有几个字段，最重要的是 <code>dli_fname</code>，就是 SO 文件在磁盘上的路径。</p>
+<p>但这里有个问题：<code>info.dli_fname</code> 返回的是运行时加载路径，<strong>不一定能直接读取原始字节</strong>（可能是从内存映射的，不是干净的文件）。所以代码没用这个路径，而是绕了一圈去 APK 里重新解压了一份，下面会说。</p>
+<hr>
+<h2 id="第三步：SoExtractor-——-从-APK-里解压原始-SO"><a href="#第三步：SoExtractor-——-从-APK-里解压原始-SO" class="headerlink" title="第三步：SoExtractor —— 从 APK 里解压原始 SO"></a>第三步：SoExtractor —— 从 APK 里解压原始 SO</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// APK 本质上是个 ZIP 文件</span></span><br><span class="line"><span class="type">ZipFile</span> <span class="variable">zipFile</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ZipFile</span>(<span class="string">&quot;/data/app/com.xxx/base.apk&quot;</span>);</span><br><span class="line"><span class="type">ZipEntry</span> <span class="variable">entry</span> <span class="operator">=</span> zipFile.getEntry(<span class="string">&quot;lib/arm64-v8a/libriskcontrol.so&quot;</span>);</span><br><span class="line"><span class="comment">// 解压到 /data/user/0/com.xxx/cache/libriskcontrol.so</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>为什么要这么做</strong>：需要一份”标准答案”——没有被任何人动过的原始 SO 文件。APK 包打包的时候就固定了，攻击者篡改的是内存，不会去改 APK 包里的文件。所以从 APK 里解压出来的 SO，就是原始未被篡改的版本。</p>
+<p><strong>APK 为什么能当 ZIP 打开</strong>：APK 文件格式本身就是 ZIP，Android 系统安装时从里面解包各种资源和代码。</p>
+<hr>
+<h2 id="第四步：解析-ELF-——-找到函数在文件里的位置"><a href="#第四步：解析-ELF-——-找到函数在文件里的位置" class="headerlink" title="第四步：解析 ELF —— 找到函数在文件里的位置"></a>第四步：解析 ELF —— 找到函数在文件里的位置</h2><p>这是最复杂的一步。SO 文件是 ELF 格式（Executable and Linkable Format），是 Linux&#x2F;Android 上二进制文件的标准格式。</p>
+<p><strong>ELF 文件的结构</strong>（简化版）：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">ELF文件</span><br><span class="line">├── ELF Header（文件头）：记录整个文件的基本信息</span><br><span class="line">├── Program Headers（程序头表）：描述运行时内存布局</span><br><span class="line">├── .dynsym（动态符号表）：记录所有导出函数的名字、地址、大小</span><br><span class="line">├── .dynstr（字符串表）：符号名字的字符串数据</span><br><span class="line">├── .text（代码段）：实际的机器码字节</span><br><span class="line">└── ...其他节</span><br></pre></td></tr></table></figure>
+
+<p>代码做的事：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 1. 把整个 SO 文件 mmap 到内存（相当于把文件内容读进来）</span></span><br><span class="line"><span class="type">void</span>* mm = <span class="built_in">mmap</span>(<span class="literal">NULL</span>, file_size, PROT_READ, MAP_PRIVATE, fd, <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 2. 找到 .dynsym 节（动态符号表）</span></span><br><span class="line"><span class="comment">// 遍历所有节，找名字是 &quot;.dynsym&quot; 的那个</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 3. 在符号表里按名字找目标函数</span></span><br><span class="line"><span class="comment">// 每个符号条目有：st_name（名字索引）、st_value（虚拟地址）、st_size（大小）</span></span><br><span class="line"><span class="keyword">for</span> (每个符号) &#123;</span><br><span class="line">    <span class="keyword">if</span> (符号名 == 目标函数名) &#123;</span><br><span class="line">        vaddr = 符号.st_value;  <span class="comment">// 虚拟地址</span></span><br><span class="line">        size  = 符号.st_size;   <span class="comment">// 函数字节数</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 4. 虚拟地址 → 文件偏移（关键转换）</span></span><br><span class="line"><span class="comment">// 虚拟地址是运行时内存地址，文件偏移是在磁盘文件里的位置</span></span><br><span class="line"><span class="comment">// 需要通过 Program Headers 里的 PT_LOAD 段来换算：</span></span><br><span class="line">file_offset = segment.p_offset + (vaddr - segment.p_vaddr)</span><br></pre></td></tr></table></figure>
+
+<p><strong>为什么需要地址转换</strong>：函数在 ELF 文件里记录的是”运行时虚拟地址”，但我们要从磁盘文件里读字节，需要的是”文件内偏移量”。这两个不一样，需要通过段信息换算。</p>
+<hr>
+<h2 id="第五步和第六步：分别算两份-CRC32"><a href="#第五步和第六步：分别算两份-CRC32" class="headerlink" title="第五步和第六步：分别算两份 CRC32"></a>第五步和第六步：分别算两份 CRC32</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 磁盘版本：从文件的 file_offset 位置读 size 个字节，算 CRC32</span></span><br><span class="line"><span class="built_in">compute_crc32_from_file</span>(so_path, file_offset, size, &amp;file_crc);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 内存版本：从 dlsym 返回的地址读 size 个字节，算 CRC32</span></span><br><span class="line"><span class="built_in">compute_crc32_from_memory</span>(sym_addr, size, &amp;mem_crc);</span><br></pre></td></tr></table></figure>
+
+<p><strong>CRC32 是什么</strong>：一种校验算法，给任意一段字节数据，算出一个 32 位的数字（指纹）。同样的字节内容算出同样的数，哪怕改动一个字节，结果就会完全不同。</p>
+<p><strong>为什么用查表法</strong>：CRC32 可以在运行时动态生成计算表，但代码里把 256 个表项直接硬编码进去了。原因是：如果动态生成，生成过程本身也可能被 Hook，硬编码进去就少了一个被篡改的入口点。</p>
+<hr>
+<h2 id="最终对比（Java-层）"><a href="#最终对比（Java-层）" class="headerlink" title="最终对比（Java 层）"></a>最终对比（Java 层）</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">JSONObject</span> <span class="variable">obj</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">JSONObject</span>(nativeResult);</span><br><span class="line"><span class="type">long</span> <span class="variable">memCrc</span>  <span class="operator">=</span> obj.optLong(<span class="string">&quot;mem_crc&quot;</span>);</span><br><span class="line"><span class="type">long</span> <span class="variable">fileCrc</span> <span class="operator">=</span> obj.optLong(<span class="string">&quot;file_crc&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (memCrc == fileCrc) &#123;</span><br><span class="line">    <span class="comment">// 两份字节一致，函数没被动过</span></span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">// 不一致，说明内存里的函数被 Hook 修改了</span></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">RiskItem</span>(RiskType.CRC, <span class="string">&quot;Native symbol CRC mismatch&quot;</span>, <span class="number">5</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="整个流程的一句话总结-1"><a href="#整个流程的一句话总结-1" class="headerlink" title="整个流程的一句话总结"></a>整个流程的一句话总结</h2><blockquote>
+<p>用函数名查到它在内存里的地址，再从 APK 包里解压出未被篡改的原始 SO，解析 ELF 格式找到同一个函数在磁盘文件里的位置，对这两份字节各算一个 CRC32 指纹，指纹不同就说明内存里的函数被 Hook 改写过了。</p>
+</blockquote>
+<hr>
+<h2 id="面试时说这一块的话术-1"><a href="#面试时说这一块的话术-1" class="headerlink" title="面试时说这一块的话术"></a>面试时说这一块的话术</h2><blockquote>
+<p>“代码完整性这块的核心思路是：Hook 只改内存不改磁盘。所以我在 Native 层用 <code>dlsym</code> 拿到函数的内存地址，同时从 APK 包里解压出原始 SO 文件，解析 ELF 符号表定位到同一个函数的磁盘字节，两边各算一个 CRC32 做对比。如果 Frida 做了 inline hook，函数开头的跳转指令会让内存 CRC 和磁盘 CRC 对不上，这样就能检测到。”</p>
+</blockquote>
+<p>&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;</p>
+<hr>
+<h2 id="整体检测架构"><a href="#整体检测架构" class="headerlink" title="整体检测架构"></a>整体检测架构</h2><p>SDK 分为三大模块，共 <strong>12 个检测项</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">环境完整性检测 (envIntegrityDetector)</span><br><span class="line">├── RootDetector</span><br><span class="line">├── MagiskDetector</span><br><span class="line">├── OverlayDetector (KernelSU / APatch)</span><br><span class="line">├── EmulatorDetector</span><br><span class="line">├── VirtualMachineDetector</span><br><span class="line">├── AospDetector</span><br><span class="line">└── BootloaderDetector</span><br><span class="line"></span><br><span class="line">运行时安全检测 (runtimeDetector)</span><br><span class="line">├── FridaDetector</span><br><span class="line">├── XposedDetector</span><br><span class="line">├── LSPosedDetector</span><br><span class="line">├── DebugDetector</span><br><span class="line">└── DynamicInstructionDetector</span><br><span class="line"></span><br><span class="line">代码完整性校验 (codeIntegrityDetector)</span><br><span class="line">└── CrcIntegrityDetector</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="一、环境完整性检测"><a href="#一、环境完整性检测" class="headerlink" title="一、环境完整性检测"></a>一、环境完整性检测</h2><h3 id="1-RootDetector-—-Root-检测"><a href="#1-RootDetector-—-Root-检测" class="headerlink" title="1. RootDetector — Root 检测"></a>1. RootDetector — Root 检测</h3><p><strong>原理</strong>：在常见路径下查找 <code>su</code> 二进制文件。</p>
+<p>检查路径包括 <code>/system/bin/</code>、<code>/system/xbin/</code>、<code>/sbin/</code>、<code>/data/local/</code> 等 16 个目录。只要任意一个路径下存在 <code>su</code> 文件，就认为 Root 风险成立（风险等级 4）。</p>
+<hr>
+<h3 id="2-MagiskDetector-—-Magisk-检测"><a href="#2-MagiskDetector-—-Magisk-检测" class="headerlink" title="2. MagiskDetector — Magisk 检测"></a>2. MagiskDetector — Magisk 检测</h3><p><strong>三种手段叠加</strong>：</p>
+<ul>
+<li><strong>系统属性检查</strong>：通过反射调用 <code>android.os.SystemProperties.get()</code>，检测 <code>init.svc.magisk_service</code>、<code>magisk.version</code> 等 6 个 Magisk 特有属性是否存在</li>
+<li><strong>包名检查</strong>：用 PackageManager 查询 <code>com.topjohnwu.magisk</code> 等 3 个 Magisk 管理器包名</li>
+<li><strong>挂载点扫描</strong>：读取 <code>/proc/self/mounts</code> 和 <code>/proc/self/mountinfo</code>，查找包含 <code>magisk</code>、<code>magisk.img</code> 等关键词的挂载记录（风险等级 5）</li>
+</ul>
+<hr>
+<h3 id="3-OverlayDetector-—-KernelSU-APatch-检测"><a href="#3-OverlayDetector-—-KernelSU-APatch-检测" class="headerlink" title="3. OverlayDetector — KernelSU &#x2F; APatch 检测"></a>3. OverlayDetector — KernelSU &#x2F; APatch 检测</h3><p><strong>原理</strong>：检测 <code>/system</code> 分区是否被 OverlayFS 覆盖（这是 APatch&#x2F;KernelSU 的典型特征）。</p>
+<p>读取 <code>/proc/self/mountinfo</code> 和 <code>/proc/mounts</code>，查找挂载类型为 <code>overlay</code>、或包含 <code>lowerdir=/system</code> 的行，并根据关键词进一步判断是 APatch、Magisk 还是 KernelSU（风险等级 5）。</p>
+<hr>
+<h3 id="4-EmulatorDetector-—-模拟器检测（指令集）"><a href="#4-EmulatorDetector-—-模拟器检测（指令集）" class="headerlink" title="4. EmulatorDetector — 模拟器检测（指令集）"></a>4. EmulatorDetector — 模拟器检测（指令集）</h3><p><strong>原理</strong>：执行 <code>getprop ro.product.cpu.abi</code>，读取设备 CPU 架构。</p>
+<p>真实 Android 手机都是 ARM 架构（<code>arm64-v8a</code> &#x2F; <code>armeabi-v7a</code>），而模拟器通常是 x86&#x2F;x86_64，所以检测到 <code>x86</code> 就判定为模拟器（风险等级 5）。</p>
+<hr>
+<h3 id="5-VirtualMachineDetector-—-虚拟机检测（Native-层）"><a href="#5-VirtualMachineDetector-—-虚拟机检测（Native-层）" class="headerlink" title="5. VirtualMachineDetector — 虚拟机检测（Native 层）"></a>5. VirtualMachineDetector — 虚拟机检测（Native 层）</h3><p><strong>原理</strong>：在 Native 层（C++ JNI）用 <code>__system_property_get()</code> 检测虚拟机特有的系统属性。</p>
+<p>检测列表包括：<code>init.svc.noxd</code>（夜神模拟器）、<code>init.svc.qemud</code>（QEMU）、<code>vmos.camera.enable</code>（VMOS）、<code>init.svc.vbox86-setup</code>（VirtualBox）等 13 个属性（风险等级 4）。</p>
+<hr>
+<h3 id="6-AospDetector-—-AOSP-原生系统检测"><a href="#6-AospDetector-—-AOSP-原生系统检测" class="headerlink" title="6. AospDetector — AOSP 原生系统检测"></a>6. AospDetector — AOSP 原生系统检测</h3><p><strong>Java + Native 双重检测</strong>：</p>
+<ul>
+<li><strong>Java 层</strong>：读取 <code>Build.FINGERPRINT</code>（包含 <code>generic</code>&#x2F;<code>aosp</code>&#x2F;<code>unknown</code>）、<code>Build.TAGS</code>（<code>test-keys</code>）、<code>Build.TYPE</code>（<code>userdebug</code>&#x2F;<code>eng</code>）</li>
+<li><strong>Native 层</strong>：C++ 执行 <code>popen(&quot;getprop&quot;)</code> 遍历所有系统属性，查找含 <code>[Android/aosp</code> 字样的条目（风险等级 3）</li>
+</ul>
+<hr>
+<h3 id="7-BootloaderDetector-—-Bootloader-解锁检测"><a href="#7-BootloaderDetector-—-Bootloader-解锁检测" class="headerlink" title="7. BootloaderDetector — Bootloader 解锁检测"></a>7. BootloaderDetector — Bootloader 解锁检测</h3><p><strong>三层检测</strong>：</p>
+<ul>
+<li><strong>PersistentDataBlockManager</strong>：通过反射调用系统私有接口 <code>getFlashLockState()</code>，返回 0 &#x3D; 解锁</li>
+<li><strong>Verified Boot</strong>：检查设备是否具备 <code>FEATURE_VERIFIED_BOOT</code> 系统特性</li>
+<li><strong>Native 层</strong>：JNI 再次读取 Bootloader 相关属性（风险等级 4）</li>
+</ul>
+<hr>
+<h3 id="8-FridaDetector-—-Frida-注入检测"><a href="#8-FridaDetector-—-Frida-注入检测" class="headerlink" title="8. FridaDetector — Frida 注入检测"></a>8. FridaDetector — Frida 注入检测</h3><p><strong>三种手段</strong>：</p>
+<ul>
+<li><strong>线程名扫描</strong>：遍历 <code>/proc/self/task/*/status</code>，查找线程名为 <code>gum-js-loop</code>（Frida GumJS 引擎特有线程）或 <code>gmain</code></li>
+<li><strong>内存映射扫描</strong>：读取 <code>/proc/self/maps</code>，查找包含 <code>FRIDA_PEER_SETUP_ACTIVE</code> 的条目</li>
+<li><strong>文件描述符扫描</strong>：遍历 <code>/proc/self/fd</code>，读取符号链接目标，查找包含 <code>linjector</code> 的路径（风险等级 5）</li>
+</ul>
+<hr>
+<h3 id="9-XposedDetector-—-Xposed-框架检测"><a href="#9-XposedDetector-—-Xposed-框架检测" class="headerlink" title="9. XposedDetector — Xposed 框架检测"></a>9. XposedDetector — Xposed 框架检测</h3><p><strong>三种手段</strong>：</p>
+<ul>
+<li><strong>ClassLoader 检测</strong>：正常 App 的 ClassLoader 类名是 <code>dalvik.system.PathClassLoader</code>，被 Xposed Hook 后会被替换为自定义类</li>
+<li><strong>类加载检测</strong>：尝试 <code>Class.forName(&quot;de.robv.android.xposed.XposedBridge&quot;)</code>，能找到说明已注入</li>
+<li><strong>包名检测</strong>：检查 Xposed Installer（<code>de.robv.android.xposed.installer</code>）和 LSPosed Manager（<code>org.lsposed.manager</code>）是否安装（风险等级 5）</li>
+</ul>
+<hr>
+<h3 id="10-LSPosedDetector-—-LSPosed-栈帧检测"><a href="#10-LSPosedDetector-—-LSPosed-栈帧检测" class="headerlink" title="10. LSPosedDetector — LSPosed 栈帧检测"></a>10. LSPosedDetector — LSPosed 栈帧检测</h3><p><strong>原理</strong>：主动抛出一个 <code>RuntimeException</code> 然后捕获，分析调用栈中每一帧的类名。</p>
+<p>如果栈帧中出现 <code>de.robv.android.xposed</code>、<code>hookbridge</code>、<code>xposedbridge</code>、<code>shamiko</code> 等字样，说明当前线程调用栈被 LSPosed Hook 介入过（风险等级 5）。</p>
+<hr>
+<h3 id="11-DebugDetector-—-调试器检测"><a href="#11-DebugDetector-—-调试器检测" class="headerlink" title="11. DebugDetector — 调试器检测"></a>11. DebugDetector — 调试器检测</h3><p><strong>Java + Native 双层</strong>：</p>
+<ul>
+<li><strong>Java 层</strong>：<code>android.os.Debug.isDebuggerConnected()</code></li>
+<li><strong>Native 层（C++）</strong>：遍历 <code>/proc/&lt;pid&gt;/task/*/status</code>，读取 <code>TracerPid</code> 字段。TracerPid !&#x3D; 0 说明有进程正在 ptrace 跟踪（即 Native 调试），同时还检查各线程 UID 是否一致（风险等级 3）</li>
+</ul>
+<hr>
+<h3 id="12-DynamicInstructionDetector-—-动态注入-SO-检测"><a href="#12-DynamicInstructionDetector-—-动态注入-SO-检测" class="headerlink" title="12. DynamicInstructionDetector — 动态注入 SO 检测"></a>12. DynamicInstructionDetector — 动态注入 SO 检测</h3><p><strong>原理</strong>：读取 <code>/proc/self/maps</code>（进程内存映射），对照一份黑名单 SO 列表，检查是否有恶意 SO 被注入。</p>
+<p>黑名单包含：<code>libfrida-gadget.so</code>、<code>libarthook_native.so</code>、<code>libsandhook.so</code>、<code>libxposed_art.so</code>、<code>frida-agent-64.so</code> 等 16 个已知 Hook 框架的 SO 文件名（风险等级 4）。</p>
+<hr>
+<h3 id="13-CrcIntegrityDetector-—-Native-函数-CRC-校验"><a href="#13-CrcIntegrityDetector-—-Native-函数-CRC-校验" class="headerlink" title="13. CrcIntegrityDetector — Native 函数 CRC 校验"></a>13. CrcIntegrityDetector — Native 函数 CRC 校验</h3><p><strong>原理</strong>：通过 JNI 调用 Native 层的 <code>checkSymbol()</code> 函数，对指定的 Native 符号（如 <code>Java_com_greatgu_riskcontrol_..._detectAosp</code>）同时计算：</p>
+<ul>
+<li><strong>内存中</strong>该函数的 CRC</li>
+<li><strong>磁盘上 SO 文件</strong>中该函数的 CRC</li>
+</ul>
+<h2 id="代码完整性检测的核心思路"><a href="#代码完整性检测的核心思路" class="headerlink" title="代码完整性检测的核心思路"></a>代码完整性检测的核心思路</h2><p><strong>问题</strong>：攻击者用 Frida&#x2F;Xposed 对 Native 函数 Hook 后，函数在内存里的字节码会被修改（插入跳转指令），但磁盘上的 SO 文件不变。</p>
+<p><strong>思路</strong>：对同一个函数，分别计算<strong>内存版本</strong>和<strong>磁盘版本</strong>的 CRC32，两者不一致就说明函数被篡改了。</p>
+<hr>
+<h2 id="完整执行流程"><a href="#完整执行流程" class="headerlink" title="完整执行流程"></a>完整执行流程</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">Java层调用 detect()</span><br><span class="line">    ↓</span><br><span class="line">checkSymbol(&quot;Java_com_..._detectAosp&quot;)  [JNI]</span><br><span class="line">    ↓</span><br><span class="line">Native层 NativeIntegrity.cpp</span><br><span class="line">    ├── 1. dlsym() → 找到函数在内存中的地址</span><br><span class="line">    ├── 2. dladdr() → 找到该地址属于哪个 SO 文件</span><br><span class="line">    ├── 3. 回调 Java SoExtractor → 从 APK 包里解压出原始 SO 文件到 cache 目录</span><br><span class="line">    ├── 4. 解析 ELF 文件 → 找到该符号在文件中的偏移量和大小</span><br><span class="line">    ├── 5. 计算磁盘 CRC32（从解压的文件读字节）</span><br><span class="line">    ├── 6. 计算内存 CRC32（从 dlsym 返回的地址读字节）</span><br><span class="line">    └── 返回 JSON &#123;&quot;ok&quot;:true, &quot;file_crc&quot;:12345, &quot;mem_crc&quot;:12345, &quot;size&quot;:256&#125;</span><br><span class="line">    ↓</span><br><span class="line">Java层解析 JSON</span><br><span class="line">    └── mem_crc == file_crc ? 安全 : 被篡改 → 返回 RiskItem</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="第一步：dlsym-找内存地址"><a href="#第一步：dlsym-找内存地址" class="headerlink" title="第一步：dlsym 找内存地址"></a>第一步：dlsym 找内存地址</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sym_addr = <span class="built_in">dlsym</span>(RTLD_DEFAULT, symbol);</span><br></pre></td></tr></table></figure>
+
+<p><code>RTLD_DEFAULT</code> 表示在当前进程所有已加载的动态库里搜索这个符号名，直接拿到该函数在内存中运行时的地址。</p>
+<hr>
+<h3 id="第二步：dladdr-定位-SO-路径"><a href="#第二步：dladdr-定位-SO-路径" class="headerlink" title="第二步：dladdr 定位 SO 路径"></a>第二步：dladdr 定位 SO 路径</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Dl_info info;</span><br><span class="line"><span class="built_in">dladdr</span>(sym_addr, &amp;info);</span><br><span class="line"><span class="comment">// info.dli_fname = &quot;/data/app/.../lib/arm64/libriskcontrol.so&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>给一个内存地址，反查它属于哪个 SO 文件，拿到文件路径。</p>
+<hr>
+<h3 id="第三步：SoExtractor-解压原始-SO"><a href="#第三步：SoExtractor-解压原始-SO" class="headerlink" title="第三步：SoExtractor 解压原始 SO"></a>第三步：SoExtractor 解压原始 SO</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// SoExtractor.java</span></span><br><span class="line"><span class="type">String</span> <span class="variable">apkPath</span> <span class="operator">=</span> appInfo.sourceDir; <span class="comment">// APK 本质上是个 ZIP</span></span><br><span class="line"><span class="type">ZipFile</span> <span class="variable">zipFile</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ZipFile</span>(apkPath);</span><br><span class="line"><span class="type">String</span> <span class="variable">entryPath</span> <span class="operator">=</span> <span class="string">&quot;lib/&quot;</span> + abi + <span class="string">&quot;/&quot;</span> + soName; <span class="comment">// 如 lib/arm64-v8a/libriskcontrol.so</span></span><br><span class="line"><span class="type">ZipEntry</span> <span class="variable">entry</span> <span class="operator">=</span> zipFile.getEntry(entryPath);</span><br><span class="line"><span class="comment">// 解压到 context.getCacheDir()，返回路径</span></span><br></pre></td></tr></table></figure>
+
+<p>APK 本质上是 ZIP 压缩包，SO 文件打包在 <code>lib/&lt;abi&gt;/</code> 目录里。把它解压出来，这就是<strong>未被 Hook 的原始版本</strong>，作为”标准答案”。</p>
+<hr>
+<h3 id="第四步：解析-ELF，找到函数的文件偏移和大小"><a href="#第四步：解析-ELF，找到函数的文件偏移和大小" class="headerlink" title="第四步：解析 ELF，找到函数的文件偏移和大小"></a>第四步：解析 ELF，找到函数的文件偏移和大小</h3><p>这是技术难度最高的部分。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 支持 32位(Elf32) 和 64位(Elf64) 两种格式</span></span><br><span class="line"><span class="comment">// 解析流程：</span></span><br><span class="line"><span class="comment">// 1. mmap 整个 SO 文件</span></span><br><span class="line"><span class="comment">// 2. 优先查找 .dynsym 节（动态符号表），找不到再找 .symtab</span></span><br><span class="line"><span class="comment">// 3. 遍历符号表，按符号名匹配，拿到 st_value（虚拟地址）和 st_size（大小）</span></span><br><span class="line"><span class="comment">// 4. 遍历 PT_LOAD 段，把虚拟地址换算成文件偏移：</span></span><br><span class="line"><span class="comment">//    file_offset = segment.p_offset + (st_value - segment.p_vaddr)</span></span><br><span class="line"><span class="comment">// 5. 如果 st_size == 0（stripped），找下一个符号地址估算大小</span></span><br></pre></td></tr></table></figure>
+
+<p>关键转换公式：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">文件偏移 = segment.p_offset + (符号虚拟地址 - segment.p_vaddr)</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="第五步和第六步：分别计算两份-CRC32"><a href="#第五步和第六步：分别计算两份-CRC32" class="headerlink" title="第五步和第六步：分别计算两份 CRC32"></a>第五步和第六步：分别计算两份 CRC32</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 磁盘：从文件的 file_offset 位置读 size 字节，计算 CRC32</span></span><br><span class="line"><span class="built_in">compute_crc32_from_file</span>(so_path, file_offset, size, &amp;file_crc);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 内存：直接从 dlsym 返回的地址读 size 字节，计算 CRC32</span></span><br><span class="line"><span class="built_in">compute_crc32_from_memory</span>(sym_addr, size, &amp;mem_crc);</span><br></pre></td></tr></table></figure>
+
+<p>CRC32 使用的是标准 IEEE 802.3 查表法，查表数组在编译时就硬编码进去了（避免运行时生成被篡改）。</p>
+<hr>
+<h3 id="最终判断（Java-层）"><a href="#最终判断（Java-层）" class="headerlink" title="最终判断（Java 层）"></a>最终判断（Java 层）</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// CrcIntegrityDetector.java</span></span><br><span class="line"><span class="type">JSONObject</span> <span class="variable">obj</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">JSONObject</span>(res);</span><br><span class="line"><span class="type">long</span> <span class="variable">memCrc</span>  <span class="operator">=</span> obj.optLong(<span class="string">&quot;mem_crc&quot;</span>, -<span class="number">1</span>);</span><br><span class="line"><span class="type">long</span> <span class="variable">fileCrc</span> <span class="operator">=</span> obj.optLong(<span class="string">&quot;file_crc&quot;</span>, -<span class="number">1</span>);</span><br><span class="line"><span class="type">boolean</span> <span class="variable">ok</span>   <span class="operator">=</span> obj.optBoolean(<span class="string">&quot;ok&quot;</span>, <span class="literal">false</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 三个条件都满足才算安全</span></span><br><span class="line"><span class="keyword">return</span> ok &amp;&amp; memCrc != -<span class="number">1</span> &amp;&amp; fileCrc != -<span class="number">1</span> &amp;&amp; memCrc == fileCrc;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="为什么能检测-Hook"><a href="#为什么能检测-Hook" class="headerlink" title="为什么能检测 Hook"></a>为什么能检测 Hook</h2><p>以 Frida inline hook 为例，它的原理是在函数开头写入一条跳转指令（如 <code>B #offset</code> 或 <code>MOV X16, addr; BR X16</code>），把执行流重定向到自己的 handler，执行完再跳回来。</p>
+<p>这几个字节被修改后，内存里读到的 CRC32 就和磁盘上原始字节的 CRC32 对不上，从而被检测到。</p>
+<hr>
+<h2 id="一句话总结"><a href="#一句话总结" class="headerlink" title="一句话总结"></a>一句话总结</h2><blockquote>
+<p>从 APK 包中解压出原始 SO 文件，解析 ELF 符号表定位函数位置，对同一函数分别在磁盘和内存计算 CRC32，不一致即说明函数在内存中被 Hook 篡改。</p>
+</blockquote>
+<h2 id="面试项目包装：Android底层Camera劫持系统"><a href="#面试项目包装：Android底层Camera劫持系统" class="headerlink" title="面试项目包装：Android底层Camera劫持系统"></a>面试项目包装：Android底层Camera劫持系统</h2><h3 id="项目一句话定位"><a href="#项目一句话定位" class="headerlink" title="项目一句话定位"></a>项目一句话定位</h3><blockquote>
+<p>在Android框架层实现<strong>运行时相机流劫持与实时替换</strong>，用于研究人脸认证系统（如微信人脸识别）的活体检测绕过攻击面，验证现有防护机制的有效性与盲区。</p>
+</blockquote>
+<hr>
+<h3 id="技术亮点（按面试深度递进）"><a href="#技术亮点（按面试深度递进）" class="headerlink" title="技术亮点（按面试深度递进）"></a>技术亮点（按面试深度递进）</h3><p><strong>1. 系统级切入点选择（体现对Android架构的深入理解）</strong></p>
+<p>你没有选择在应用层或HAL层拦截，而是选择了<code>device3/Camera3OutputUtils.cpp</code>中的<code>finishReturningOutputBuffers()</code>函数作为Hook点。这个选择有明确的技术理由：</p>
+<ul>
+<li>HAL层实现因厂商不同差异极大，移植性差</li>
+<li><code>device3</code>是API1&#x2F;API2的公共下层，一处修改全部覆盖</li>
+<li><code>finishReturningOutputBuffers()</code>时机恰好是所有buffer数据就绪、但尚未交给Surface的”黄金窗口”，可以无损读写完整帧数据</li>
+</ul>
+<p><strong>2. 自定义网络传输协议（<code>CameraStreamTransmitter</code>）</strong></p>
+<p>实现了一个<strong>生产级的异步多线程单例传输器</strong>：</p>
+<ul>
+<li>UDP广播实现PC自动发现（无需手动配IP）</li>
+<li>TCP全双工传输YUV帧数据，自定义<code>FrameHeader</code>协议（Magic: <code>0xCAFEBABE</code>）</li>
+<li>3线程架构：独立的network&#x2F;send&#x2F;receive线程，发送队列上限30帧防OOM</li>
+<li>100ms超时保护：超时则透传原始帧，保证相机正常使用不受干扰</li>
+<li>4MB预分配收发缓冲区减少堆碎片</li>
+</ul>
+<p><strong>3. SEPolicy深度改造（体现Android安全机制理解）</strong></p>
+<p>原生<code>cameraserver</code>被<code>neverallow</code>规则禁止使用任何网络socket。你修改了<code>system/sepolicy/private/cameraserver.te</code>，精确添加了<code>tcp_socket</code>&#x2F;<code>udp_socket</code>&#x2F;<code>netd</code>通信权限，同时将<code>cameraserver</code>权限从普通用户提升到<code>root</code>并赋予<code>NET_ADMIN</code>&#x2F;<code>NET_RAW</code> capability。</p>
+<p><strong>4. 运行时动态配置（零侵入式开关）</strong></p>
+<p>通过Android系统属性（<code>persist.camera.hook.*</code>）控制Hook行为，无需重新编译&#x2F;刷机即可调整拦截的流ID、分辨率、格式，配置每30帧刷新一次（~1秒延迟），平衡了实时性与<code>getprop</code>系统调用开销。</p>
+<p><strong>5. 流识别与去重探针（<code>SentryProbe</code>）</strong></p>
+<p>实现了带”Camera ID + 指纹 + 帧号回滚检测”的智能流日志系统，能区分前后摄同分辨率流，并在相机重新打开时自动重置记录，解决了双摄同步问题的调试难题。</p>
+<hr>
+<h3 id="遇到的核心挑战及解法（面试中最加分的部分）"><a href="#遇到的核心挑战及解法（面试中最加分的部分）" class="headerlink" title="遇到的核心挑战及解法（面试中最加分的部分）"></a>遇到的核心挑战及解法（面试中最加分的部分）</h3><table>
+<thead>
+<tr>
+<th>挑战</th>
+<th>现象</th>
+<th>解法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>双摄同步丢帧</strong></td>
+<td>拦截单路流导致广角+超广角帧对齐失败，系统等待超时丢帧</td>
+<td>分析Android Camera3要求双摄帧严格对齐的机制，规划拦截多流方案</td>
+</tr>
+<tr>
+<td><strong>串行阻塞卡顿</strong></td>
+<td>每帧有多个流（预览&#x2F;录像&#x2F;人脸检测）依次触发网络往返，帧率从25fps降至16fps</td>
+<td>提出<code>hasIntercepted</code>标志位方案：每帧只对首个符合条件的流做网络通信</td>
+</tr>
+<tr>
+<td><strong>PC发现失败</strong></td>
+<td>UDP广播走无线网卡而非USB有线网络，手机收不到</td>
+<td>排查多网卡路由，确认广播接口选择策略</td>
+</tr>
+<tr>
+<td><strong>SEPolicy封锁</strong></td>
+<td><code>neverallow</code>规则阻止cameraserver使用socket</td>
+<td>精确分析denial日志，逐条追加<code>allow</code>规则，最终打通<code>netd</code>路由链路</td>
+</tr>
+<tr>
+<td><strong>延迟优化</strong></td>
+<td>全量YUV传输往返~62ms</td>
+<td>提出”控制信令+按需分发”架构：手机传极简压缩图用于PC端决策，PC只传回替换帧，大幅减少上行带宽</td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="研究意义（用于学术-防守方向面试的表述）"><a href="#研究意义（用于学术-防守方向面试的表述）" class="headerlink" title="研究意义（用于学术&#x2F;防守方向面试的表述）"></a>研究意义（用于学术&#x2F;防守方向面试的表述）</h3><blockquote>
+<p>本项目从<strong>攻击者视角</strong>验证了Android人脸认证系统的一类系统级威胁：在用户无感知的情况下，攻击者若能获得设备Root权限（如刷入自定义ROM），可在框架层实时替换相机输入，绕过所有依赖<code>CameraService</code>数据流的活体检测方案，且对应用层完全透明。研究结论可直接指导防护方案设计：例如可信执行环境（TEE）与Camera HAL的直连绑定、帧完整性校验、以及对<code>cameraserver</code>权限异常的运行时监控。</p>
+</blockquote>
+<hr>
+<h3 id="关键技术栈（写在简历-项目列表里）"><a href="#关键技术栈（写在简历-项目列表里）" class="headerlink" title="关键技术栈（写在简历&#x2F;项目列表里）"></a>关键技术栈（写在简历&#x2F;项目列表里）</h3><p><code>Android AOSP定制</code> · <code>Camera3 HAL Framework</code> · <code>LineageOS ROM编译</code> · <code>C++多线程网络编程</code> · <code>YUV图像处理</code> · <code>Android SEPolicy</code> · <code>GraphicBuffer/gralloc</code> · <code>系统属性驱动配置</code> · <code>fastboot/ADB调试链</code></p>
+<hr>
+<p>如果你需要，我可以进一步帮你：</p>
+<ol>
+<li>写成一段完整的<strong>简历项目描述</strong>（200字以内的精炼版）</li>
+<li>准备<strong>面试中可能被追问的技术问题</strong>和答案</li>
+<li>整理成一份<strong>英文版项目介绍</strong></li>
+</ol>
+<p>你倾向于哪个方向？<br><img src="/image-13.png" alt="alt text"></p>
+<p><img src="/image-14.png" alt="alt text"></p>
+<p>好的，这两点结合起来其实能讲一个非常完整的故事——“环境伪造”才是这个研究最精彩的部分。让我重新写：</p>
+<hr>
+<h2 id="面试叙述稿：完整故事版"><a href="#面试叙述稿：完整故事版" class="headerlink" title="面试叙述稿：完整故事版"></a>面试叙述稿：完整故事版</h2><hr>
+<h3 id="开场：为什么做这个"><a href="#开场：为什么做这个" class="headerlink" title="开场：为什么做这个"></a>开场：为什么做这个</h3><p>“我们在做人脸认证安全研究，核心问题是：<strong>现有的活体检测方案，能不能被系统级的攻击手段绕过？</strong></p>
+<p>要回答这个问题，首先要搭一个攻击平台。我的思路是：在Android框架层劫持相机数据，让我可以在运行时把任意图像注入给目标App，同时让App完全感知不到任何异常。</p>
+<p>听起来简单，但真正实现的时候，我发现挑战一个接一个——每解决一个，就开启了下一个。”</p>
+<hr>
+<h3 id="第一关：找到正确的拦截点"><a href="#第一关：找到正确的拦截点" class="headerlink" title="第一关：找到正确的拦截点"></a>第一关：找到正确的拦截点</h3><p>“我一开始考虑过在HAL层拦截，但Pixel 9用的是高通私有HAL，代码根本看不到，移植性也极差。</p>
+<p>后来我仔细研究了Android Camera3的调用链，找到了一个’黄金窗口’：<code>Camera3OutputUtils.cpp</code>里的<code>finishReturningOutputBuffers()</code>函数。</p>
+<p>这个函数的时机非常特殊——HAL已经把这一帧的所有图像数据都打包好了，放进<code>returnableBuffers</code>列表，但还没有交给App的Surface。也就是说，我在这里读写buffer，对App来说就像什么都没发生过。</p>
+<p>更重要的是，这里是API1和API2共同的下层，一处改动，微信、抖音、系统相机全部覆盖，不需要针对每个App单独适配。”</p>
+<hr>
+<h3 id="第二关：让数据飞起来——网络传输"><a href="#第二关：让数据飞起来——网络传输" class="headerlink" title="第二关：让数据飞起来——网络传输"></a>第二关：让数据飞起来——网络传输</h3><p>“拦截到帧之后，要实时发给PC，PC处理完再回传。</p>
+<p>这里有个很关键的性能要求：必须在一帧的时间窗口内完成一次网络往返，否则就会阻塞整个相机管线，导致卡顿甚至崩溃。</p>
+<p>我实现了一个三线程的异步传输器：独立的发送线程、接收线程、和一个负责PC自动发现的网络管理线程。PC端开机后往局域网广播一个UDP包，手机监听到了就自动连上去，不需要手动配IP。</p>
+<p>同时我设置了100ms的超时保护——如果PC没在限定时间内回传，就直接放行原始帧，相机正常工作，不影响用户体验。”</p>
+<hr>
+<h3 id="第三关：第一个坑——SEPolicy封锁"><a href="#第三关：第一个坑——SEPolicy封锁" class="headerlink" title="第三关：第一个坑——SEPolicy封锁"></a>第三关：第一个坑——SEPolicy封锁</h3><p>“代码写好，编译进ROM，刷进手机，一运行……TCP socket直接创建失败。</p>
+<p>看了下<code>adb logcat</code>，发现SELinux在狂打denial日志。原来Android的<code>cameraserver</code>进程被<code>neverallow</code>规则明确禁止使用任何网络socket——Google的设计理念是：相机服务不应该碰网络，这是安全隔离。</p>
+<p>我得修改<code>system/sepolicy/private/cameraserver.te</code>，逐条把需要的权限加进去：TCP socket创建&#x2F;连接、UDP socket广播、还有<code>netd</code>的路由权限。</p>
+<p>最麻烦的是<code>netd</code>这条链路——光加了socket权限还不够，还要允许<code>netd</code>反过来使用<code>cameraserver</code>的文件描述符，才能完成路由表的注册。这个双向关系在文档里完全没提，是靠反复看denial日志一条一条试出来的。</p>
+<p>顺便，我还把<code>cameraserver</code>的运行用户从普通账号改成了<code>root</code>，并赋予了<code>NET_ADMIN</code>和<code>NET_RAW</code> capability，这样才能真正绑定网络。”</p>
+<hr>
+<h3 id="第四关：双摄同步丢帧"><a href="#第四关：双摄同步丢帧" class="headerlink" title="第四关：双摄同步丢帧"></a>第四关：双摄同步丢帧</h3><p>“网络通了，帧率却很不稳定，logcat里会周期性出现同步超时的错误。</p>
+<p>排查了很久才搞清楚原因：Pixel 9拍摄时实际上同时开着两个摄像头——广角和超广角，这样切换倍率的时候才能无缝衔接。Android Camera3框架要求这两路摄像头的帧必须<strong>严格对齐</strong>，帧号一致才能一起往上层送。</p>
+<p>我只拦截了其中一路，我的网络往返耗时让这路帧”慢了”，框架就会等待，一直等到超时，才把两路一起丢弃——这就是丢帧的来源。</p>
+<p>这个问题让我意识到，要真正做到无感知拦截，必须同时处理多路流，或者至少精确识别出哪路是预览流，只拦截它、放行其他所有流，避免跨流的时序干扰。”</p>
+<hr>
+<h3 id="第五关：串行阻塞——性能瓶颈"><a href="#第五关：串行阻塞——性能瓶颈" class="headerlink" title="第五关：串行阻塞——性能瓶颈"></a>第五关：串行阻塞——性能瓶颈</h3><p>“解决了丢帧问题，又遇到了卡顿：帧率只有16fps左右，而目标是流畅的30fps。</p>
+<p>原因是每一帧可能包含多个output buffer——预览流、录像流、人脸检测的小分辨率流，全都在<code>returnableBuffers</code>列表里。我的代码对每个buffer都做了一次网络往返，等于一帧触发了3次串行的网络通信，延迟叠加。</p>
+<p>解决方案是加一个每帧的<code>hasIntercepted</code>标志位，第一个符合条件的流做网络通信，后面的全部直接放行，把串行改成了真正的单次往返。”</p>
+<hr>
+<h3 id="第六关：最难的一关——让目标App”看不见”攻击平台"><a href="#第六关：最难的一关——让目标App”看不见”攻击平台" class="headerlink" title="第六关：最难的一关——让目标App”看不见”攻击平台"></a>第六关：最难的一关——让目标App”看不见”攻击平台</h3><p>“前面这些都是相机劫持本身的挑战，但还有一个更根本的问题：</p>
+<p><strong>目标App根本不愿意跑。</strong></p>
+<p>要测试微信人脸认证，微信必须能正常运行。但我刷的是自定义LineageOS，没有Google服务，微信连登录都不行。而且我开了Root权限，很多安全类App（包括支付宝、微信的安全SDK）会在运行时检测Root，一旦发现直接关闭敏感功能。</p>
+<p>更严重的是<strong>Play Integrity</strong>——Google的设备认证机制。现在很多App在启动人脸认证之前会调用Play Integrity API，获取一个设备可信度评级：如果设备没有通过认证，直接拒绝运行敏感功能。一个刷了自定义ROM的Root设备，Play Integrity默认全部失败。</p>
+<p>所以我做了三件事：</p>
+<p><strong>第一，刷入Google三件套（GApps）。</strong> 让设备有完整的Google服务环境，微信能正常登录和运行。</p>
+<p><strong>第二，刷入KernelSU + susfs模块。</strong> susfs是一个内核级的文件系统欺骗模块，它能在内核层面隐藏挂载点和特定文件，让App通过<code>/proc</code>或文件系统探测Root的手段全部失效——不是绕过检测，而是让检测看到的就是一个干净的系统。</p>
+<p><strong>第三，刷入Play Integrity bypass模块。</strong> 配合KernelSU的隐藏能力，伪造设备认证链，让Play Integrity API返回通过状态。</p>
+<p>做完这三步，目标App眼里看到的，是一台完全正常的、没有Root的、通过了Google认证的标准Android手机。而实际上，相机数据在它不知情的情况下，已经被我接管了。”</p>
+<hr>
+<h3 id="结尾：研究结论"><a href="#结尾：研究结论" class="headerlink" title="结尾：研究结论"></a>结尾：研究结论</h3><p>“这整个链路打通之后，我们得到的结论是：</p>
+<p>对于任何<strong>纯粹依赖<code>CameraService</code>数据链路</strong>的活体检测方案，在攻击者能够刷入自定义ROM的前提下，这类攻击从技术上是可行的，且对应用层完全透明。</p>
+<p>防护的根本出路在于：把相机数据的可信根放到TEE（可信执行环境）里，建立HAL到认证逻辑的可信通路，而不是依赖<code>CameraService</code>这个可以被修改的系统服务。这也是我们研究最终给出的防护建议。”</p>
+<hr>
+<p>如果还需要，我可以帮你：</p>
+<ul>
+<li>压缩成<strong>2分钟口头版</strong>（去掉细节，保留故事弧）</li>
+<li>整理成<strong>英文版</strong></li>
+<li>针对某类面试（安全研究岗&#x2F;系统开发岗&#x2F;Android安全方向）调整侧重点</li>
+</ul>
+<p>Q：我现在的问题是，要不要那个拆分一下，把参数扰动拆到滴滴项目中<br>然后那个。然后把那个大规模、强对抗的人脸认证安全评测框架<br>我的自定义rom拆分到正在做的第二期项目？</p>
+<p>下面将会给你我曾经的主要工作，我主要是做腾讯人脸支付的攻防安全项目，现在我想要总结过去的工作，包装一下，想要在面试中使用，展现一下我的能力。请你先帮我复述和回忆一下，并且帮我想一想如何包装。</p>
 <p>防止别人面试的时候问我这些比较显而易见的问题，请你帮我弥补和回忆一下这些gap。</p>
 <p>这一部分是我做的，请你说说这一部分我做了什么，具体做了哪些检查，你要好好想想包装一下，好让我能够在面试有用</p>
 <p>最后：如果我面试的时候，怎么初步介绍和总结这些工作？</p>
@@ -282,6 +698,11 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
       <span class="post-title">3418. 机器人可以获得的最大金币数</span>
     </a>
     
+    
+    <a class="post-nav-item post-nav-prev" href="/2026/04/06/%E6%BB%B4%E6%BB%B4%E4%BA%BA%E8%84%B8/">
+      <div class="nav-arrow">NEWER&nbsp;&gt;</div>
+      <span class="post-title">滴滴人脸</span>
+    </a>
     
 </nav>
 
