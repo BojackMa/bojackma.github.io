@@ -1,0 +1,5 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     '/Users/mashitianxia/Desktop/blog/source/_posts/hello_world'
+relocations:     []
+...
