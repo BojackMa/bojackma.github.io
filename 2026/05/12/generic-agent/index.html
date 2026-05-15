@@ -15,7 +15,7 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title> - Bojack Ma</title>
+<title>generic agent - Bojack Ma</title>
 
   <link rel="icon" href="/img/favicon.ico">
 
@@ -257,7 +257,11 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
   <main class="page-content" aria-label="Content">
       <header class="header">
         
-        <h1 class="header-title" itemprop="headline"></h1>
+          <div class="tags">
+            <a href="/tags/agent/" class="tag"># agent</a>
+          </div>
+        
+        <h1 class="header-title" itemprop="headline">generic agent</h1>
           <div class="post-meta">
             <time>May 12, 2026</time>
             <span itemprop="author">
@@ -266,20 +270,38 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
           </div>
         </header>
 
-          <div class="page-content"><p>抱着交流、学习的心态去的</p>
-<p>要不会就打哈哈，运气好，随便点点，再问就是要是放到现在大模型就很快了。（反混淆）</p>
-<p>这个确实做的不好，因为也没有人指导</p>
-<p>放低姿态：因为我接触的大佬少，所以交流、学习</p>
+          <div class="page-content"><h3 id="技术报告"><a href="#技术报告" class="headerlink" title="技术报告"></a>技术报告</h3><p>长时域性能不是由上下文长度决定的，而是由在有限上下文预算内维护了多少决策相关信息决定的。我们主打一个经济！！！！！！</p>
+<p>generic agent与claude code的差别</p>
+<p>1、GenericAgent 有一套由 SOP 文档（L0）驱动的记忆提炼流程，Agent 被训练为在任务完成后主动归纳经验写进L2。这是一个闭环。Claude Code 的记忆是开环的——它执行任务，但不主动沉淀。记忆质量完全依赖模型在任务后愿不愿意、会不会正确归纳。如果模型归纳出了错误经验写进L2，后续所有任务都会受污染，且很难发现。</p>
+<p>Claude Code的工具实现质量很高。Claude Code 的 Bash、文件编辑工具是经过大量打磨的——diff 格式、原子操作、错误恢复。</p>
+<p>claude code是注重模型，它的模型与工具协议是经过协同训练。</p>
+<p>claude code的上下文利用效率高。它会调用模型本身来生成当前会话的摘要，然后用这个摘要替换整个历史重新开始——这叫模型辅助压缩，保留的是语义而不是截断的字符串。</p>
+<p>Claude Code是生产级别的专业编码助手，强调的是模型能力。GenericAgent是架构灵活性，只能够刚刚够用。 </p>
+<p>关键：有一套记忆提炼流程！！！</p>
+<p>记忆系统就是为了解决这个问题：把重要的东西存成文件，下次启动时读进来。<br>本质上就是四类文件，按重要程度分层：<br>L1：一张小纸条（最多30行）<br>写的是”提示词”，告诉 Agent：嘿，你有哪些能力可以用。比如”浏览器操作去看 tmwebdriver_sop”。不写具体怎么用，只告诉它”有这个东西”。 有这个东西、名字是什么，这个是始终提供给他的。相当于一个索引。<br>L2：一个小本本（事实，环境配置这种东西）<br>记你环境里的具体事实。比如你的代理地址是什么、某个账号的密码放哪、某个路径在哪。你的 L2 现在是空的，因为你刚装，什么都没积累。<br>L3：一个文件夹（sop&#x2F;技能）<br>放具体的操作手册（.md 文件）和工具脚本（.py 文件）。比如”怎么控制键鼠”、”怎么做 OCR 识别”。这些大部分是项目自带的，不是你用出来的。<br>L4：历史档案室<br>把过去的对话记录压缩存档，以后可以翻出来参考。<br>Claude Code 也有记忆，就是 <code>CLAUDE.md</code> 文件——你或者它把重要信息写进去，每次启动读进来。本质上和 GenericAgent 完全一样。<br>区别只有一个：GenericAgent 设计了一套规则，让 Agent 自己决定写什么、怎么写，并且有 ROI 这样的限制防止乱写。Claude Code 的 CLAUDE.md 主要靠你自己维护。谁更好用，取决于你信不信 Agent 能归纳出正确的经验。如果它归纳错了写进去，后续每次对话都会被这条错误记忆影响，而且你很难发现。</p>
+<p>ROI &#x3D; (不放这几个词时犯错的概率 × 代价) &#x2F; 每轮词数成本<br>这个公式在解决什么问题？L1 只有 30 行预算，每行内容每次对话都会被塞进 system prompt 消耗 token。所以 L1 里的每一行都有固定的持续成本：每轮对话都要付这些 token 的钱。问题就变成了：这行值不值得放？因为 L1 的内容每轮都要付 token 成本，写了一堆”模型本来就会”的废话，等于每次对话都在白花钱，而且稀释了真正重要的信息的注意力权重。</p>
+<p>GenericAgent（GA）：一个围绕基本原则构建的自演化LLM Agent系统：最大化上下文信息密度。核心观点是，Agent性能不仅由上下文长度决定，而是由在有限上下文预算内引入、维护和更新了多少决策相关信息决定。</p>
+<p>分层记忆机制有选择地只保留经过验证的、与任务相关的知识，塑造哪些信息随时间持续存在。 上下文截断和压缩机制在上下文超出预算时主动管理历史信息，通过分层截断和压缩确保活跃上下文保持简洁和与任务相关。这些机制共同将上下文从信息的被动累积不断重塑为高密度、以决策为中心的表示。</p>
+<p>上下文密度：<br>1、位置偏差：放置在上下文中间的相关信息比放在开头或结尾附近的信息显著更难检索<br>2、不相关内容将注意力从决策关键证据上转移走而主动降低性能<br>3、LLM的有效上下文长度远低于其名义窗口大小，这意味着所提供上下文的一部分在生成过程中在功能上是不可访问的。</p>
+<p>在平衡层面去做了很好的尝试</p>
+<p>2.1.1 工具最小性<br>为了在任务执行开始前最大化上下文信息密度，GA将其工具设计约束为最小必要集合。工具扩散在两个层面引入系统级成本：                     </p>
+<ul>
+<li>在提示层面，每个额外工具都扩大了注入上下文的工具模式和相关指令；在多轮交互中，这种开销累积并占据应该为与任务相关信息保留的有效上下文预算。                                                                                                           - 在策略层面，每个额外工具都扩大了行动空间并增加了工具选择的歧义性。这使规划更加脆弱，削弱了工具使用模式的稳定性，并增加了执行错误<br>和不必要重试的可能性。</li>
+</ul>
+<p>效果是：在SOP-Bench、 Lifelong AgentBench、RealFin-Benchmark 效果超过了其他</p>
+<p>GA 在设计上试图做一个会积累的系统。当然，记忆系统的真正挑战还没解决，但即便是记忆系统，最硬的问题还悬着：写入质量依赖模型当场的推理质量。模型归纳出错误经验，写进L2，之后每轮都被注入，且很难被发现和纠正。这不是 GA 独有的问题，而是所有”Agent 自主写记忆”方案都面临的根本性难题——验证比生成更难。No Execution, No Memory原则是目前最好的防线，但也只是部分缓解，不能完全解决。  </p>
+<p>主流做法是把 Agent 的能力问题归结为模型能力问题——模型更强、窗口更大，问题自然解决。GA 的立场是：这是一个信息工程问题，不完全是模型问题。即使模型足够强，如果上下文组织得很差，推理质量也会系统性地下降。所以架构设计、记忆管理、上下文压缩，这些”工程层面”的事情有独立的价值，不会被更强的模型完全替代。上下文里放什么，比上下文有多长，更重要！！！！！！！！</p>
+<p>GA 的记忆写入通常发生在成功完成子目标或完成错误恢复之后。进入记忆整合阶段后，系统会过滤掉猜测、中间状态以及失败分支，仅保留“已经通过工具执行验证”的信息。随后，模型会判断这些信息应归入 L2 事实记忆还是 L3 SOP，并以增量 patch 的形式写入对应记忆文件，同时同步更新 L1 索引。整个过程并不存在自动化的质量评估指标，“某条信息是否值得长期保留”完全依赖模型在整合阶段的推理判断，其依据主要来自 memory_management_sop.md 中定义的规则与决策树。</p>
 </div>
           <nav class="post-nav">
     
-    <a class="post-nav-item post-nav-next" href="/2026/05/12/hello-world/">
+    <a class="post-nav-item post-nav-next" href="/2026/05/08/agent/">
       <div class="nav-arrow">&lt;&nbsp;OLDER</div>
-      <span class="post-title">Hello World</span>
+      <span class="post-title">agent</span>
     </a>
     
     
-    <a class="post-nav-item post-nav-prev" href="/2026/05/12/hello_world.dSYM/Contents/Resources/Relocations/aarch64/hello_world/">
+    <a class="post-nav-item post-nav-prev" href="/2026/05/15/AAA%E9%9D%A2%E8%AF%95%EF%BC%9A%E9%9D%A2%E8%AF%95%E5%9F%BA%E7%A1%80/">
       <div class="nav-arrow">NEWER&nbsp;&gt;</div>
       <span class="post-title"></span>
     </a>

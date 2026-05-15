@@ -257,6 +257,10 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
   <main class="page-content" aria-label="Content">
       <header class="header">
         
+          <div class="tags">
+            <a href="/tags/agent/" class="tag"># agent</a>
+          </div>
+        
         <h1 class="header-title" itemprop="headline">agent</h1>
           <div class="post-meta">
             <time>May 08, 2026</time>
@@ -266,7 +270,121 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
           </div>
         </header>
 
-          <div class="page-content"></div>
+          <div class="page-content"><h1 id="AI-Agent、Tool-Use-与-LLM-辅助逆向分析"><a href="#AI-Agent、Tool-Use-与-LLM-辅助逆向分析" class="headerlink" title="AI Agent、Tool Use 与 LLM 辅助逆向分析"></a>AI Agent、Tool Use 与 LLM 辅助逆向分析</h1><hr>
+<h2 id="一、AI-Agent-的理解"><a href="#一、AI-Agent-的理解" class="headerlink" title="一、AI Agent 的理解"></a>一、AI Agent 的理解</h2><h3 id="最核心的一句话"><a href="#最核心的一句话" class="headerlink" title="最核心的一句话"></a>最核心的一句话</h3><blockquote>
+<p>普通 LLM 是”问答机”，Agent 是”能自主完成任务的执行者”。</p>
+</blockquote>
+<h3 id="LLM-vs-Agent-的区别"><a href="#LLM-vs-Agent-的区别" class="headerlink" title="LLM vs Agent 的区别"></a>LLM vs Agent 的区别</h3><table>
+<thead>
+<tr>
+<th>维度</th>
+<th>普通 LLM</th>
+<th>AI Agent</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>交互模式</td>
+<td>单轮&#x2F;多轮对话</td>
+<td>自主规划、多步执行</td>
+</tr>
+<tr>
+<td>能否使用工具</td>
+<td>否</td>
+<td>是（搜索、代码执行、API调用）</td>
+</tr>
+<tr>
+<td>能否感知环境</td>
+<td>否</td>
+<td>是（读文件、看结果、调整策略）</td>
+</tr>
+<tr>
+<td>有无记忆</td>
+<td>仅上下文窗口</td>
+<td>可接外部记忆（向量库等）</td>
+</tr>
+</tbody></table>
+<h3 id="Agent-的核心循环"><a href="#Agent-的核心循环" class="headerlink" title="Agent 的核心循环"></a>Agent 的核心循环</h3><p>最经典的是 <strong>ReAct 框架</strong>（Reasoning + Acting）：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">观察（Observe）</span><br><span class="line">    ↓</span><br><span class="line">思考（Think）：我需要做什么，下一步怎么办？</span><br><span class="line">    ↓</span><br><span class="line">行动（Act）：调用工具 / 执行代码</span><br><span class="line">    ↓</span><br><span class="line">观察结果 → 继续思考 → 直到任务完成</span><br></pre></td></tr></table></figure>
+
+<p>举个例子：让 Agent 分析一个 APK</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">任务：分析 com.example.app.apk 是否有数据外发行为</span><br><span class="line"></span><br><span class="line">步骤1 Think：我需要先反编译这个 APK</span><br><span class="line">步骤1 Act：调用 jadx 工具 → 得到 Java 代码</span><br><span class="line"></span><br><span class="line">步骤2 Think：现在搜索网络相关代码</span><br><span class="line">步骤2 Act：搜索 OkHttp/Retrofit/URL 关键字 → 找到几个可疑类</span><br><span class="line"></span><br><span class="line">步骤3 Think：需要分析这些类的具体行为</span><br><span class="line">步骤3 Act：读取并分析代码 → 发现有加密上传逻辑</span><br><span class="line"></span><br><span class="line">步骤4 Think：需要确认上传地址</span><br><span class="line">步骤4 Act：追踪字符串常量 → 找到 C2 域名</span><br><span class="line"></span><br><span class="line">最终输出报告</span><br></pre></td></tr></table></figure>
+
+<p>这就是 Agent 的价值：<strong>自主拆解任务、调用工具、根据中间结果调整方向</strong>。</p>
+<hr>
+<h2 id="二、Tool-Use-是如何工作的"><a href="#二、Tool-Use-是如何工作的" class="headerlink" title="二、Tool Use 是如何工作的"></a>二、Tool Use 是如何工作的</h2><h3 id="本质"><a href="#本质" class="headerlink" title="本质"></a>本质</h3><p>Tool Use（也叫 Function Calling）是让 LLM 输出<strong>结构化的工具调用指令</strong>，由外部代码执行后再把结果返回给 LLM。</p>
+<p><strong>LLM 本身不执行任何工具</strong>，它只负责”决定调什么、传什么参数”。</p>
+<h3 id="完整流程"><a href="#完整流程" class="headerlink" title="完整流程"></a>完整流程</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">① 系统提示中告诉 LLM：你有以下工具可以使用</span><br><span class="line">   &#123;</span><br><span class="line">     &quot;name&quot;: &quot;run_jadx&quot;,</span><br><span class="line">     &quot;description&quot;: &quot;反编译APK，返回Java源码&quot;,</span><br><span class="line">     &quot;parameters&quot;: &#123;&quot;apk_path&quot;: &quot;string&quot;&#125;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">② 用户输入任务 → LLM 思考后输出：</span><br><span class="line">   &#123;</span><br><span class="line">     &quot;tool&quot;: &quot;run_jadx&quot;,</span><br><span class="line">     &quot;parameters&quot;: &#123;&quot;apk_path&quot;: &quot;/tmp/target.apk&quot;&#125;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">③ 你的程序（Agent框架）捕获这个输出，真正执行 jadx</span><br><span class="line"></span><br><span class="line">④ 把执行结果塞回对话上下文，LLM继续思考</span><br><span class="line"></span><br><span class="line">⑤ 循环直到 LLM 输出最终答案（不再调用工具）</span><br></pre></td></tr></table></figure>
+
+<h3 id="关键点"><a href="#关键点" class="headerlink" title="关键点"></a>关键点</h3><ul>
+<li>LLM 的”工具能力”本质是<strong>训练出来的格式能力</strong>，它学会了在合适时机输出结构化 JSON</li>
+<li>工具的描述（description）写得好不好，直接影响 LLM 是否会正确调用</li>
+<li>工具执行失败时，要把错误信息也返回给 LLM，让它自行纠错重试</li>
+</ul>
+<h3 id="常见框架怎么封装这件事"><a href="#常见框架怎么封装这件事" class="headerlink" title="常见框架怎么封装这件事"></a>常见框架怎么封装这件事</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># LangChain 风格（概念示意）</span></span><br><span class="line"><span class="meta">@tool</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">run_frida_script</span>(<span class="params">script: <span class="built_in">str</span>, package: <span class="built_in">str</span></span>) -&gt; <span class="built_in">str</span>:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;在目标APP上运行frida脚本，返回输出结果&quot;&quot;&quot;</span></span><br><span class="line">    <span class="comment"># 实际执行 frida 命令</span></span><br><span class="line">    result = subprocess.run([<span class="string">&quot;frida&quot;</span>, <span class="string">&quot;-U&quot;</span>, <span class="string">&quot;-f&quot;</span>, package, <span class="string">&quot;-l&quot;</span>, script])</span><br><span class="line">    <span class="keyword">return</span> result.stdout</span><br><span class="line"></span><br><span class="line">agent = create_react_agent(llm, tools=[run_frida_script, decompile_apk, search_code])</span><br><span class="line">agent.invoke(&#123;<span class="string">&quot;input&quot;</span>: <span class="string">&quot;分析微信的消息加密方式&quot;</span>&#125;)</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="三、用-LLM-辅助逆向分析"><a href="#三、用-LLM-辅助逆向分析" class="headerlink" title="三、用 LLM 辅助逆向分析"></a>三、用 LLM 辅助逆向分析</h2><p>这是这个岗位最有意思的部分，也是当前业界真正在做的方向。</p>
+<h3 id="场景1：代码理解与反混淆"><a href="#场景1：代码理解与反混淆" class="headerlink" title="场景1：代码理解与反混淆"></a>场景1：代码理解与反混淆</h3><p>逆向最痛苦的事之一是读混淆代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 混淆后</span></span><br><span class="line"><span class="keyword">public</span> String <span class="title function_">a</span><span class="params">(String b, <span class="type">int</span> c)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> d.a(b) + e.b(c, <span class="built_in">this</span>.f);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>把这段扔给 LLM + 上下文（这个类的其他方法、字符串常量、调用链），LLM 能推断出：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// LLM 分析结果</span></span><br><span class="line"><span class="keyword">public</span> String <span class="title function_">encryptData</span><span class="params">(String plainText, <span class="type">int</span> keyIndex)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> Base64Encoder.encode(plainText) + KeyManager.getKey(keyIndex, <span class="built_in">this</span>.secretSeed);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>实际做法</strong>：不是直接把整个 smali 扔进去，而是先用传统工具定位关键函数，再用 LLM 做语义理解。</p>
+<hr>
+<h3 id="场景2：自动生成-Frida-Hook-脚本"><a href="#场景2：自动生成-Frida-Hook-脚本" class="headerlink" title="场景2：自动生成 Frida Hook 脚本"></a>场景2：自动生成 Frida Hook 脚本</h3><p>告诉 LLM：</p>
+<blockquote>
+<p>“这是目标 APP 的登录函数签名和类结构，帮我生成一个 frida 脚本，hook 这个函数并打印入参和返回值”</p>
+</blockquote>
+<p>LLM 可以生成可用的 frida 脚本，大幅减少手写模板代码的时间。</p>
+<hr>
+<h3 id="场景3：加密算法识别"><a href="#场景3：加密算法识别" class="headerlink" title="场景3：加密算法识别"></a>场景3：加密算法识别</h3><p>黑产 APP 常用自定义加密，传统方法靠经验人眼识别。LLM 可以：</p>
+<ul>
+<li>看到一段操作字节数组的代码 → 判断是 AES&#x2F;RC4&#x2F;自定义XOR</li>
+<li>结合常数（如 <code>0x9e3779b9</code> 是 TEA 算法特征）做辅助判断</li>
+<li>给出解密的思路和对应的 Python 实现</li>
+</ul>
+<hr>
+<h3 id="场景4：行为报告自动生成"><a href="#场景4：行为报告自动生成" class="headerlink" title="场景4：行为报告自动生成"></a>场景4：行为报告自动生成</h3><p>Agent 串联多个工具后，可以自动产出结构化分析报告：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">输入：一个待分析的 APK</span><br><span class="line">输出：</span><br><span class="line">  - 网络请求列表及目标域名</span><br><span class="line">  - 敏感权限使用情况</span><br><span class="line">  - 可疑加密/混淆行为</span><br><span class="line">  - 风险评分</span><br></pre></td></tr></table></figure>
+
+<p>这正是这个岗位说的”拿结果、做真东西”。</p>
+<hr>
+<h3 id="LLM-辅助逆向的局限（面试时说出来会加分）"><a href="#LLM-辅助逆向的局限（面试时说出来会加分）" class="headerlink" title="LLM 辅助逆向的局限（面试时说出来会加分）"></a>LLM 辅助逆向的局限（面试时说出来会加分）</h3><table>
+<thead>
+<tr>
+<th>局限</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>上下文窗口有限</td>
+<td>大型 APP 代码量远超 LLM 处理能力，需要精准定位后再喂入</td>
+</tr>
+<tr>
+<td>幻觉问题</td>
+<td>LLM 可能”自信地”给出错误的函数语义，需要验证</td>
+</tr>
+<tr>
+<td>native 层较弱</td>
+<td>LLM 对 ARM 汇编的理解不如 Java&#x2F;Python 准确</td>
+</tr>
+<tr>
+<td>无法动态执行</td>
+<td>必须结合 frida 等动态工具才能完整分析</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="面试时的表达建议"><a href="#面试时的表达建议" class="headerlink" title="面试时的表达建议"></a>面试时的表达建议</h2><p>如果被问到这几个问题，可以这样组织语言：</p>
+<ol>
+<li><strong>先说本质</strong>（Agent &#x3D; 能自主规划和使用工具的系统）</li>
+<li><strong>举一个具体场景</strong>（APK 分析 Agent 的执行流程）</li>
+<li><strong>说清楚边界</strong>（LLM 的局限，以及如何和传统工具结合）</li>
+</ol>
+<p>这样的回答显示你既理解原理，又有落地思维，符合这个岗位”做真东西”的导向。</p>
+<hr>
+<p>需要我进一步展开哪个部分，或者帮你模拟一下面试问答吗？</p>
+</div>
           <nav class="post-nav">
     
     <a class="post-nav-item post-nav-next" href="/2026/04/10/%E5%B0%8F%E8%BD%A6%E6%B8%B8%E6%88%8F/">
@@ -275,9 +393,9 @@ pageTitle += ' [ ' + config.title + ' ]'; -->
     </a>
     
     
-    <a class="post-nav-item post-nav-prev" href="/2026/05/12/hello-world/">
+    <a class="post-nav-item post-nav-prev" href="/2026/05/12/generic-agent/">
       <div class="nav-arrow">NEWER&nbsp;&gt;</div>
-      <span class="post-title">Hello World</span>
+      <span class="post-title">generic agent</span>
     </a>
     
 </nav>
